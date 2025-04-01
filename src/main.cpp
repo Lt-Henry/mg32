@@ -11,6 +11,7 @@
 using namespace std;
 
 const uint8_t* keyboard;
+int keyboard_numkeys;
 
 int load_bank(lua_State* L)
 {
@@ -19,7 +20,12 @@ int load_bank(lua_State* L)
 
 int key(lua_State* L)
 {
+    int key = lua_tonumber(L, 1);
 
+    if (key < keyboard_numkeys) {
+        lua_pushinteger(L,keyboard[key]);
+        return 1;
+    }
 
     return 0;
 }
@@ -34,7 +40,7 @@ int sleep(lua_State* L)
 int mg32_start_frame(lua_State* L)
 {
     SDL_PumpEvents();
-    keyboard = SDL_GetKeyboardState(nullptr);
+    keyboard = SDL_GetKeyboardState(&keyboard_numkeys);
 
     return 0;
 }

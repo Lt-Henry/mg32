@@ -10,6 +10,8 @@ _process_frame = {}
 _incoming = {}
 _id = 32
 
+_mg32_quit = false
+
 function frame()
     if me == nil then
         -- main function
@@ -92,3 +94,6 @@ function find(p)
 
 end
 
+function exit()
+    _mg32_quit = true
+end
