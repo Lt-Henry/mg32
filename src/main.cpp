@@ -11,6 +11,7 @@
 #include <chrono>
 #include <thread>
 #include <map>
+#include <vector>
 #include <sstream>
 
 using namespace std;
@@ -18,7 +19,7 @@ using namespace std;
 map<int,mg32::Bank*> banks;
 
 const uint8_t* keyboard;
-int keyboard_numkeys;
+vector<uint8_t> keyboard_last;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -42,8 +43,20 @@ int key(lua_State* L)
 {
     int key = lua_tonumber(L, 1);
 
-    if (key < keyboard_numkeys) {
+    if (key < SDL_NUM_SCANCODES) {
         lua_pushboolean(L,keyboard[key]);
+        return 1;
+    }
+
+    return 0;
+}
+
+int keydown(lua_State* L)
+{
+    int key = lua_tonumber(L, 1);
+
+    if (key < SDL_NUM_SCANCODES) {
+        lua_pushboolean(L,keyboard[key] > keyboard_last[key]);
         return 1;
     }
 
@@ -60,8 +73,13 @@ int sleep(lua_State* L)
 int mg32_start_frame(lua_State* L)
 {
     SDL_RenderClear(renderer);
+
+    for (size_t n = 0;n < SDL_NUM_SCANCODES; n++) {
+        keyboard_last[n] = keyboard[n];
+    }
+
     SDL_PumpEvents();
-    keyboard = SDL_GetKeyboardState(&keyboard_numkeys);
+    keyboard = SDL_GetKeyboardState(nullptr);
 
     return 0;
 }
@@ -69,6 +87,7 @@ int mg32_start_frame(lua_State* L)
 int mg32_end_frame(lua_State* L)
 {
     SDL_RenderPresent(renderer);
+
     return 0;
 }
 
@@ -77,6 +96,17 @@ int mg32_exit(lua_State* L)
     exit(0);
 
     return 0;
+}
+
+int mg32_get_screen_size(lua_State* L)
+{
+    int w,h;
+
+    SDL_GetRendererOutputSize(renderer,&w,&h);
+    lua_pushinteger(L,w);
+    lua_pushinteger(L,h);
+
+    return 2;
 }
 
 int mg32_draw_texture(lua_State* L)
@@ -97,7 +127,7 @@ int mg32_draw_texture(lua_State* L)
         int col = texture_id % th;
 
         SDL_Rect srect;
-        //TODO
+
         srect.x = col * tw;
         srect.y = row * th;
         srect.w = tw;
@@ -154,6 +184,9 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, key);
     lua_setglobal(L, "key");
 
+    lua_pushcfunction(L, keydown);
+    lua_setglobal(L, "keydown");
+
     lua_pushcfunction(L, sleep);
     lua_setglobal(L, "sleep");
 
@@ -166,6 +199,9 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, mg32_exit);
     lua_setglobal(L, "mg32_exit");
 
+    lua_pushcfunction(L, mg32_get_screen_size);
+    lua_setglobal(L, "mg32_get_screen_size");
+
     lua_pushcfunction(L, mg32_draw_texture);
     lua_setglobal(L, "mg32_draw_texture");
 
@@ -177,6 +213,10 @@ int main(int argc, char* argv[])
                               640,480, 0/*SDL_WINDOW_FULLSCREEN_DESKTOP*/);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_PumpEvents();
+    keyboard = SDL_GetKeyboardState(nullptr);
+    keyboard_last.reserve(SDL_NUM_SCANCODES);
 
     lua_getglobal(L, "main");
 
