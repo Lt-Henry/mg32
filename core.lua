@@ -4,16 +4,18 @@ STATE_ALIVE = 2
 STATE_SLEEP = 3
 STATE_DEAD = 4
 
+KEY_ESCAPE = 41
+KEY_Z = 29
+
 me = nil
 _process = {}
 _process_frame = {}
 _incoming = {}
 _id = 32
 
-_mg32_quit = false
-
 function frame()
     if me == nil then
+
         -- main function
 
         -- copy current list of process
@@ -35,15 +37,18 @@ function frame()
                 if v.state == STATE_BORN then
                     v.state = STATE_ALIVE
                     coroutine.resume(v.thread,table.unpack(v.args))
+                    mg32_draw_texture(v.bank,v.texture,v.x,v.y)
                     table.insert(_tmp,v)
                 elseif v.state == STATE_ALIVE then
                     coroutine.resume(v.thread)
+                    mg32_draw_texture(v.bank,v.texture,v.x,v.y)
                     table.insert(_tmp,v)
                 end
             end
         end
         _process = _tmp
         me = nil
+        mg32_end_frame()
 
     else
         coroutine.yield()
@@ -95,5 +100,5 @@ function find(p)
 end
 
 function exit()
-    _mg32_quit = true
+    mg32_exit()
 end

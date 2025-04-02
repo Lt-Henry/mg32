@@ -1,3 +1,6 @@
+
+#include "mg32.hpp"
+
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
@@ -7,14 +10,31 @@
 #include <string>
 #include <chrono>
 #include <thread>
+#include <map>
+#include <sstream>
 
 using namespace std;
+
+map<int,mg32::Bank*> banks;
 
 const uint8_t* keyboard;
 int keyboard_numkeys;
 
+SDL_Window* window;
+SDL_Renderer* renderer;
+
 int load_bank(lua_State* L)
 {
+    int id = lua_tonumber(L, 1);
+    int tw = lua_tonumber(L, 2);
+    int th = lua_tonumber(L, 3);
+
+    stringstream ss;
+
+    ss<<id<<".png";
+
+    banks[id] = new mg32::Bank(renderer, ss.str(), tw, th);
+
     return 0;
 }
 
@@ -23,7 +43,7 @@ int key(lua_State* L)
     int key = lua_tonumber(L, 1);
 
     if (key < keyboard_numkeys) {
-        lua_pushinteger(L,keyboard[key]);
+        lua_pushboolean(L,keyboard[key]);
         return 1;
     }
 
@@ -39,9 +59,59 @@ int sleep(lua_State* L)
 
 int mg32_start_frame(lua_State* L)
 {
+    SDL_RenderClear(renderer);
     SDL_PumpEvents();
     keyboard = SDL_GetKeyboardState(&keyboard_numkeys);
 
+    return 0;
+}
+
+int mg32_end_frame(lua_State* L)
+{
+    SDL_RenderPresent(renderer);
+    return 0;
+}
+
+int mg32_exit(lua_State* L)
+{
+    exit(0);
+
+    return 0;
+}
+
+int mg32_draw_texture(lua_State* L)
+{
+    int bank_id = lua_tonumber(L, 1);
+    int texture_id = lua_tonumber(L, 2);
+    int x = lua_tonumber(L, 3);
+    int y = lua_tonumber(L, 4);
+
+    mg32::Bank* bank = banks[bank_id];
+
+    if (bank) {
+
+        int tw = bank->tile_width;
+        int th = bank->tile_height;
+
+        int row = texture_id / tw;
+        int col = texture_id % th;
+
+        SDL_Rect srect;
+        //TODO
+        srect.x = col * tw;
+        srect.y = row * th;
+        srect.w = tw;
+        srect.h = th;
+
+        SDL_Rect drect;
+
+        drect.x = x;
+        drect.y = y;
+        drect.w = tw;
+        drect.h = th;
+
+        SDL_RenderCopy(renderer,bank->data,&srect,&drect);
+    }
     return 0;
 }
 
@@ -90,10 +160,16 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, mg32_start_frame);
     lua_setglobal(L, "mg32_start_frame");
 
-    SDL_Init(SDL_INIT_EVERYTHING);
+    lua_pushcfunction(L, mg32_end_frame);
+    lua_setglobal(L, "mg32_end_frame");
 
-    SDL_Window* window;
-    SDL_Renderer* renderer;
+    lua_pushcfunction(L, mg32_exit);
+    lua_setglobal(L, "mg32_exit");
+
+    lua_pushcfunction(L, mg32_draw_texture);
+    lua_setglobal(L, "mg32_draw_texture");
+
+    SDL_Init(SDL_INIT_EVERYTHING);
 
     window = SDL_CreateWindow("MG32",
                               SDL_WINDOWPOS_CENTERED,
