@@ -18,5 +18,24 @@ namespace mg32
         virtual ~Bank();
     };
 
+    enum class Command
+    {
+        Blit
+    };
 
+    class DrawCommand
+    {
+        public:
+
+        Command cmd;
+
+        int z;
+
+        SDL_Texture* texture;
+        SDL_Rect src;
+        SDL_Rect dst;
+
+        DrawCommand* left;
+        DrawCommand* right;
+    };
 }

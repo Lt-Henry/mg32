@@ -83,11 +83,11 @@ function frame()
                 if v.state == STATE_BORN then
                     v.state = STATE_ALIVE
                     coroutine.resume(v.thread,table.unpack(v.args))
-                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py)
+                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     table.insert(_tmp,v)
                 elseif v.state == STATE_ALIVE then
                     coroutine.resume(v.thread)
-                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py)
+                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     table.insert(_tmp,v)
                 end
             end
@@ -159,7 +159,7 @@ function all(p)
     local tmp = {}
 
     for k,v in pairs(_process) do
-        if v.fn == p then
+        if v.fn == p and v.state == STATE_ALIVE then
             tmp[k] = v
         end
     end
@@ -172,9 +172,18 @@ function collision(a)
     local p = nil
     for k,v in pairs(all(a)) do
 
-        if dist(v,b) < (v.radius + b.radius) then
-            p = v
-            break
+        if b.shape == S_CIRCLE and v.shape == S_CIRCLE then
+            if dist(v,b) < (v.radius + b.radius) then
+                p = v
+                break
+            end
+        end
+
+        if b.shape == S_POINT and v.shape == S_CIRCLE then
+            if dist(v,b) < v.radius then
+                p = v
+                break
+            end
         end
     end
 

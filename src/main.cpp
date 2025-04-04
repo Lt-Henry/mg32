@@ -29,6 +29,8 @@ uint32_t mouse_buttons_last;
 SDL_Window* window;
 SDL_Renderer* renderer;
 
+vector<mg32::DrawCommand> commands;
+
 int load_bank(lua_State* L)
 {
     int id = lua_tonumber(L, 1);
@@ -102,6 +104,29 @@ int buttondown(lua_State* L)
     return 1;
 }
 
+int get_mouse(lua_State* L)
+{
+
+    lua_pushinteger(L,mouse_x);
+    lua_pushinteger(L,mouse_y);
+
+    return 2;
+}
+
+int show_cursor(lua_State* L)
+{
+    SDL_ShowCursor(SDL_ENABLE);
+
+    return 0;
+}
+
+int hide_cursor(lua_State* L)
+{
+    SDL_ShowCursor(SDL_DISABLE);
+
+    return 0;
+}
+
 int sleep(lua_State* L)
 {
     int ms = lua_tonumber(L, 1);
@@ -128,11 +153,35 @@ int mg32_start_frame(lua_State* L)
         exit(0);
     }
 
+    commands.clear();
+
     return 0;
+}
+
+static void draw(mg32::DrawCommand* q)
+{
+    if (q) {
+
+        if (q->left) {
+            draw(q->left);
+        }
+
+        SDL_RenderCopy(renderer,q->texture,&q->src,&q->dst);
+
+        if (q->right) {
+            draw(q->right);
+        }
+    }
 }
 
 int mg32_end_frame(lua_State* L)
 {
+
+    if (commands.size() > 0) {
+        mg32::DrawCommand* top = &commands.data()[0];
+        draw(top);
+    }
+
     SDL_RenderPresent(renderer);
 
     return 0;
@@ -156,12 +205,33 @@ int mg32_get_screen_size(lua_State* L)
     return 2;
 }
 
+static void insert_command(mg32::DrawCommand* q, mg32::DrawCommand* t)
+{
+    if (t->z<q->z) {
+        if (q->left==nullptr) {
+            q->left=t;
+        }
+        else {
+            insert_command(q->left,t);
+        }
+    }
+    else {
+        if (q->right==nullptr) {
+            q->right=t;
+        }
+        else {
+            insert_command(q->right,t);
+        }
+    }
+}
+
 int mg32_draw_texture(lua_State* L)
 {
     int bank_id = lua_tonumber(L, 1);
     int texture_id = lua_tonumber(L, 2);
     int x = lua_tonumber(L, 3);
     int y = lua_tonumber(L, 4);
+    int z = lua_tonumber(L, 5);
 
     mg32::Bank* bank = banks[bank_id];
 
@@ -173,6 +243,33 @@ int mg32_draw_texture(lua_State* L)
         int row = texture_id / tw;
         int col = texture_id % th;
 
+        mg32::DrawCommand cmd;
+        cmd.left = nullptr;
+        cmd.right = nullptr;
+
+        cmd.z = z;
+
+        cmd.texture = bank->data;
+        cmd.src.x = col * tw;
+        cmd.src.y = row * th;
+        cmd.src.w = tw;
+        cmd.src.h = th;
+
+        cmd.dst.x = x;
+        cmd.dst.y = y;
+        cmd.dst.w = tw;
+        cmd.dst.h = th;
+
+        commands.push_back(cmd);
+
+        size_t size = commands.size();
+
+        if (size > 1) {
+            mg32::DrawCommand* top = &commands.data()[0];
+            mg32::DrawCommand* op = &commands.data()[size-1];
+            insert_command(top, op);
+        }
+        /*
         SDL_Rect srect;
 
         srect.x = col * tw;
@@ -188,6 +285,7 @@ int mg32_draw_texture(lua_State* L)
         drect.h = th;
 
         SDL_RenderCopy(renderer,bank->data,&srect,&drect);
+        */
     }
     return 0;
 }
@@ -243,6 +341,15 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, buttondown);
     lua_setglobal(L, "buttondown");
 
+    lua_pushcfunction(L, get_mouse);
+    lua_setglobal(L, "get_mouse");
+
+    lua_pushcfunction(L, show_cursor);
+    lua_setglobal(L, "show_cursor");
+
+    lua_pushcfunction(L, hide_cursor);
+    lua_setglobal(L, "hide_cursor");
+
     lua_pushcfunction(L, sleep);
     lua_setglobal(L, "sleep");
 
@@ -273,6 +380,8 @@ int main(int argc, char* argv[])
     SDL_PumpEvents();
     keyboard = SDL_GetKeyboardState(nullptr);
     keyboard_last.reserve(SDL_NUM_SCANCODES);
+
+    commands.reserve(1024);
 
     lua_getglobal(L, "main");
 

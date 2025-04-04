@@ -7,6 +7,7 @@ function player(alpha,bravo)
     me.px = 16
     me.py = 16
     me.radius = 16
+    me.shape = S_CIRCLE
 
     local width,height = get_screen_size()
     print(width.."x"..height)
@@ -43,6 +44,7 @@ function ball(x,y)
     me.px = 16
     me.py = 16
     me.radius = 16
+    me.shape = S_CIRCLE
 
     local width,height = get_screen_size()
     local vx = 4
@@ -64,11 +66,12 @@ end
 function enemy(x,y)
     me.x = x
     me.y = y
-    print("incoming enemy")
+    print("incoming enemy at "..x..","..y)
     me.texture = 2
     me.px = 16
     me.py = 16
     me.radius = 16
+    me.shape = S_CIRCLE
     
     while true do
     
@@ -83,13 +86,42 @@ function enemy(x,y)
     end
 end
 
+function pointer()
+    me.bank = 1
+    me.texture = 0
+    me.width = 16
+    me.height = 16
+    me.px = 1
+    me.py = 1
+    me.z = 100
+    me.shape = S_POINT
+
+    while true do
+        x,y = get_mouse()
+        me.x = x
+        me.y = y
+
+        if buttondown(M_RIGHT) then
+            p = collision(enemy)
+            if p then
+                kill(p)
+            end
+        end
+
+        frame()
+    end
+end
+
 function main()
 
-
     local width,height = get_screen_size()
+    hide_cursor()
+
     load_bank(0,32,32)
+    load_bank(1,16,16)
 
     create(player,8,16)
+    create(pointer)
 
     while true do
 
