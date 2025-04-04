@@ -18,6 +18,9 @@ Bank::Bank(SDL_Renderer* renderer, string filename,int tw, int th) : tile_width(
 
     data = SDL_CreateTextureFromSurface(renderer, surface);
 
+    width = surface->w;
+    height = surface->h;
+
     SDL_FreeSurface(surface);
 }
 

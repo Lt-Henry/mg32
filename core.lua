@@ -32,7 +32,26 @@ K_X = 27
 K_Y = 28
 K_Z = 29
 
+K_RETURN = 40
 K_ESCAPE = 41
+K_BACKSPACE = 42
+K_TAB = 43
+K_SPACE = 44
+
+K_RIGHT = 79
+K_LEFT = 80
+K_DOWN = 81
+K_UP = 82
+
+-- mouse buttons
+M_LEFT = 1
+M_MIDDLE = 2
+M_RIGHT = 3
+
+-- shape
+S_POINT = 0
+S_CIRCLE = 1
+S_BOX = 2
 
 me = nil
 _process = {}
@@ -64,11 +83,11 @@ function frame()
                 if v.state == STATE_BORN then
                     v.state = STATE_ALIVE
                     coroutine.resume(v.thread,table.unpack(v.args))
-                    mg32_draw_texture(v.bank,v.texture,v.x,v.y)
+                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py)
                     table.insert(_tmp,v)
                 elseif v.state == STATE_ALIVE then
                     coroutine.resume(v.thread)
-                    mg32_draw_texture(v.bank,v.texture,v.x,v.y)
+                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py)
                     table.insert(_tmp,v)
                 end
             end
@@ -100,6 +119,15 @@ function create(p,...)
         y = 0,
         z = 0,
 
+        -- pivot point
+        px = 0,
+        py = 0,
+
+        shape = S_POINT,
+        radius = 0,
+        width = 0,
+        height = 0
+
     }
 
     table.insert(_process, child)
@@ -125,6 +153,51 @@ function find(p)
     end
 
     return found
+end
+
+function all(p)
+    local tmp = {}
+
+    for k,v in pairs(_process) do
+        if v.fn == p then
+            tmp[k] = v
+        end
+    end
+
+    return tmp
+end
+
+function collision(a)
+    local b = me
+    local p = nil
+    for k,v in pairs(all(a)) do
+
+        if dist(v,b) < (v.radius + b.radius) then
+            p = v
+            break
+        end
+    end
+
+    return p
+end
+
+function dist(a,b)
+    if not a then
+        return 0
+    end
+
+    if not b then
+        b = me
+    end
+
+    if not b then
+        return 0
+    end
+
+    local vx = (a.x  - b.x )
+    local vy = (a.y  - b.y )
+
+    return math.sqrt((vx*vx)+(vy*vy))
 
 end
 

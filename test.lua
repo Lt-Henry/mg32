@@ -4,25 +4,30 @@ function player(alpha,bravo)
     print("incoming player with "..alpha.." and "..bravo)
     --print("incomimg player")
     me.texture = 1
+    me.px = 16
+    me.py = 16
+    me.radius = 16
 
     local width,height = get_screen_size()
     print(width.."x"..height)
-    local vy = 1
 
     while true do
-
-        if keydown(K_Z) then
-            create(enemy,me.x,me.y)
+        p = collision(enemy)
+        if (p) then
+            print("ouch!")
+            kill(p)
         end
 
-        me.y = me.y + vy
-
-        if me.y>height then
-            vy = -1
+        if buttondown(M_LEFT) then
+            create(enemy,me.x + 32,me.y)
         end
 
-        if me.y<0 then
-            vy = 1
+        if key(K_UP) then
+            me.y = me.y - 1
+        end
+
+        if key(K_DOWN) then
+            me.y = me.y + 1
         end
 
         frame()
@@ -35,6 +40,9 @@ function enemy(x,y)
     me.y = y
     print("incoming enemy")
     me.texture = 0
+    me.px = 16
+    me.py = 16
+    me.radius = 16
 
     local width,height = get_screen_size()
     local vx = 4

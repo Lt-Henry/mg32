@@ -9,6 +9,8 @@ namespace mg32
         public:
 
         SDL_Texture* data;
+        int width;
+        int height;
         int tile_width;
         int tile_height;
 

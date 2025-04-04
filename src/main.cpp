@@ -21,6 +21,11 @@ map<int,mg32::Bank*> banks;
 const uint8_t* keyboard;
 vector<uint8_t> keyboard_last;
 
+int mouse_x;
+int mouse_y;
+uint32_t mouse_buttons;
+uint32_t mouse_buttons_last;
+
 SDL_Window* window;
 SDL_Renderer* renderer;
 
@@ -37,6 +42,20 @@ int load_bank(lua_State* L)
     banks[id] = new mg32::Bank(renderer, ss.str(), tw, th);
 
     return 0;
+}
+
+int get_bank_info(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+
+    mg32::Bank* bank = banks[id];
+
+    lua_pushinteger(L,bank->width);
+    lua_pushinteger(L,bank->height);
+    lua_pushinteger(L,bank->tile_width);
+    lua_pushinteger(L,bank->tile_height);
+
+    return 4;
 }
 
 int key(lua_State* L)
@@ -63,6 +82,26 @@ int keydown(lua_State* L)
     return 0;
 }
 
+int button(lua_State* L)
+{
+    int btn = lua_tonumber(L, 1);
+
+    lua_pushboolean(L,SDL_BUTTON(btn) & mouse_buttons);
+
+    return 1;
+}
+
+int buttondown(lua_State* L)
+{
+    int btn = lua_tonumber(L, 1);
+
+    uint32_t last = SDL_BUTTON(btn) & mouse_buttons_last;
+    uint32_t now = SDL_BUTTON(btn) & mouse_buttons;
+    lua_pushboolean(L,now > last);
+
+    return 1;
+}
+
 int sleep(lua_State* L)
 {
     int ms = lua_tonumber(L, 1);
@@ -78,8 +117,16 @@ int mg32_start_frame(lua_State* L)
         keyboard_last[n] = keyboard[n];
     }
 
+    mouse_buttons_last = mouse_buttons;
+
     SDL_PumpEvents();
     keyboard = SDL_GetKeyboardState(nullptr);
+
+    mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+
+    if (SDL_HasEvent(SDL_QUIT)) {
+        exit(0);
+    }
 
     return 0;
 }
@@ -181,11 +228,20 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, load_bank);
     lua_setglobal(L, "load_bank");
 
+    lua_pushcfunction(L, get_bank_info);
+    lua_setglobal(L, "get_bank_info");
+
     lua_pushcfunction(L, key);
     lua_setglobal(L, "key");
 
     lua_pushcfunction(L, keydown);
     lua_setglobal(L, "keydown");
+
+    lua_pushcfunction(L, button);
+    lua_setglobal(L, "button");
+
+    lua_pushcfunction(L, buttondown);
+    lua_setglobal(L, "buttondown");
 
     lua_pushcfunction(L, sleep);
     lua_setglobal(L, "sleep");
