@@ -19,7 +19,7 @@ function player(alpha,bravo)
         end
 
         if buttondown(M_LEFT) then
-            create(enemy,me.x + 32,me.y)
+            create(ball,me.x + 32,me.y)
         end
 
         if key(K_UP) then
@@ -35,10 +35,10 @@ function player(alpha,bravo)
     print("player dead")
 end
 
-function enemy(x,y)
+function ball(x,y)
     me.x = x
     me.y = y
-    print("incoming enemy")
+    print("incoming ball")
     me.texture = 0
     me.px = 16
     me.py = 16
@@ -61,9 +61,32 @@ function enemy(x,y)
 
 end
 
+function enemy(x,y)
+    me.x = x
+    me.y = y
+    print("incoming enemy")
+    me.texture = 2
+    me.px = 16
+    me.py = 16
+    me.radius = 16
+    
+    while true do
+    
+        p = collision(ball)
+        if p then
+            kill(p)
+            print("bye!")
+            break
+        end
+        
+        frame()
+    end
+end
+
 function main()
 
 
+    local width,height = get_screen_size()
     load_bank(0,32,32)
 
     create(player,8,16)
@@ -71,11 +94,15 @@ function main()
     while true do
 
         if keydown(K_K) then
-            local p = find(enemy)
-            print("Killing enemy")
+            local p = find(ball)
+            print("Killing ball")
             kill(p)
         end
 
+        if keydown(K_E) then
+            create(enemy,math.random(width),math.random(height))
+        end
+        
         if key(K_ESCAPE) then
             print("Exit")
             exit()
