@@ -217,3 +217,20 @@ end
 function get_screen_size()
     return mg32_get_screen_size()
 end
+
+function draw_text(txt,x,y,z,bank)
+    w,h,tw,th = get_bank_info(bank)
+    --print("* "..w.." "..h.." "..tw.." "..th)
+
+    for n = 1, #txt do
+        c = txt:byte(n)
+
+        if (c>31 and c<127) then
+            c = c - 32
+            --print(c)
+            mg32_draw_texture(bank,c,x,y,z)
+        end
+        x = x + tw
+    end
+
+end

@@ -21,8 +21,8 @@ map<int,mg32::Bank*> banks;
 const uint8_t* keyboard;
 vector<uint8_t> keyboard_last;
 
-int mouse_x;
-int mouse_y;
+float mouse_x;
+float mouse_y;
 uint32_t mouse_buttons;
 uint32_t mouse_buttons_last;
 
@@ -107,8 +107,8 @@ int buttondown(lua_State* L)
 int get_mouse(lua_State* L)
 {
 
-    lua_pushinteger(L,mouse_x);
-    lua_pushinteger(L,mouse_y);
+    lua_pushnumber(L,mouse_x);
+    lua_pushnumber(L,mouse_y);
 
     return 2;
 }
@@ -147,13 +147,15 @@ int mg32_start_frame(lua_State* L)
     SDL_PumpEvents();
     keyboard = SDL_GetKeyboardState(nullptr);
 
-    mouse_buttons = SDL_GetMouseState(&mouse_x, &mouse_y);
+    int raw_mx,raw_my;
+    mouse_buttons = SDL_GetMouseState(&raw_mx, &raw_my);
+    SDL_RenderWindowToLogical(renderer,raw_mx,raw_my,&mouse_x,&mouse_y);
 
     if (SDL_HasEvent(SDL_QUIT)) {
         exit(0);
     }
 
-    commands.clear();
+    //commands.clear();
 
     return 0;
 }
@@ -183,6 +185,7 @@ int mg32_end_frame(lua_State* L)
     }
 
     SDL_RenderPresent(renderer);
+    commands.clear();
 
     return 0;
 }
@@ -198,7 +201,8 @@ int mg32_get_screen_size(lua_State* L)
 {
     int w,h;
 
-    SDL_GetRendererOutputSize(renderer,&w,&h);
+    //SDL_GetRendererOutputSize(renderer,&w,&h);
+    SDL_RenderGetLogicalSize(renderer,&w,&h);
     lua_pushinteger(L,w);
     lua_pushinteger(L,h);
 
@@ -239,9 +243,10 @@ int mg32_draw_texture(lua_State* L)
 
         int tw = bank->tile_width;
         int th = bank->tile_height;
+        int numw = bank->width/tw;
 
-        int row = texture_id / tw;
-        int col = texture_id % th;
+        int row = texture_id / numw;
+        int col = texture_id % numw;
 
         mg32::DrawCommand cmd;
         cmd.left = nullptr;
@@ -373,9 +378,10 @@ int main(int argc, char* argv[])
     window = SDL_CreateWindow("MG32",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              640,480, 0/*SDL_WINDOW_FULLSCREEN_DESKTOP*/);
+                              640*2,360*2,0/*SDL_WINDOW_FULLSCREEN_DESKTOP*/);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_RenderSetLogicalSize(renderer, 640,360);
 
     SDL_PumpEvents();
     keyboard = SDL_GetKeyboardState(nullptr);

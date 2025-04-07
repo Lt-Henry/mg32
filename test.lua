@@ -102,11 +102,14 @@ function pointer()
         me.y = y
 
         if buttondown(M_RIGHT) then
+            print("mouse:"..x..","..y)
             p = collision(enemy)
             if p then
                 kill(p)
             end
         end
+
+        --draw_text("mouse:"..x..","..y,32,32,90,32)
 
         frame()
     end
@@ -119,6 +122,7 @@ function main()
 
     load_bank(0,32,32)
     load_bank(1,16,16)
+    load_bank(32,7,9)
 
     create(player,8,16)
     create(pointer)
@@ -140,8 +144,10 @@ function main()
             exit()
         end
 
+        x,y = get_mouse()
+        draw_text("mouse:"..x..","..y,32,32,90,32)
         sleep(15)
-        --print("frame")
+
         frame()
     end
 end
