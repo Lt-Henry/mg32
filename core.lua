@@ -58,6 +58,7 @@ _process = {}
 _process_frame = {}
 _incoming = {}
 _id = 32
+_last_ticks = 0
 
 function frame()
     if me == nil then
@@ -71,6 +72,10 @@ function frame()
         end
 
         mg32_start_frame()
+
+        local current_ticks = mg32_ticks()
+        local ticks = current_ticks - _last_ticks
+        _last_ticks = current_ticks
 
         _tmp = {}
 
@@ -86,6 +91,7 @@ function frame()
                     mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     table.insert(_tmp,v)
                 elseif v.state == STATE_ALIVE then
+                    v.ticks = ticks
                     coroutine.resume(v.thread)
                     mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     table.insert(_tmp,v)
@@ -126,7 +132,9 @@ function create(p,...)
         shape = S_POINT,
         radius = 0,
         width = 0,
-        height = 0
+        height = 0,
+
+        ticks= 0
 
     }
 
@@ -185,6 +193,79 @@ function collision(a)
                 break
             end
         end
+
+        if b.shape == S_CIRCLE and v.shape == S_POINT then
+            if dist(v,b) < b.radius then
+                p = v
+                break
+            end
+        end
+
+        if b.shape == S_POINT and v.shape == S_POINT then
+            if dist(v,b) < 1 then
+                p = v
+                break
+            end
+        end
+
+        if b.shape == S_POINT and v.shape == S_BOX then
+            local wh = v.width/2
+            local hh = v.height/2
+
+            local x1 = v.x - wh
+            local x2 = v.x + wh
+            local y1 = v.y - hh
+            local y2 = v.y + hh
+
+            if b.x>= x1 and b.x<=x2 and b.y>=y1 and b.y<=y2 then
+                p = v
+                break
+            end
+        end
+
+        if b.shape == S_BOX and v.shape == S_POINT then
+            local wh = b.width/2
+            local hh = b.height/2
+
+            local x1 = b.x - wh
+            local x2 = b.x + wh
+            local y1 = b.y - hh
+            local y2 = b.y + hh
+
+            if v.x>= x1 and v.x<=x2 and v.y>=y1 and v.y<=y2 then
+                p = v
+                break
+            end
+        end
+
+        if b.shape == S_BOX and v.shape == S_CIRCLE then
+            local wh = b.width/2
+            local hh = b.height/2
+
+            local x1 = b.x - wh
+            local x2 = b.x + wh
+            local y1 = b.y - hh
+            local y2 = b.y + hh
+
+            local testx = v.x
+            local testy = v.y
+
+            if v.x < x1 then testx = x1 end
+            if v.x > x2 then testx = x2 end
+            if v.y < y1 then testy = y1 end
+            if v.y > y2 then testy = y2 end
+
+            local distx = v.x - testx
+            local disty = v.y - testy
+
+            local distt = math.sqrt( (distx*distx) + (disty*disty))
+
+            if distt < v.radius then
+                p = v
+                break
+            end
+
+        end
     end
 
     return p
@@ -210,6 +291,13 @@ function dist(a,b)
 
 end
 
+function point_dist(x1,x2,y1,y2)
+    local vx = (x1  - x2)
+    local vy = (y1  - y2)
+
+    return math.sqrt((vx*vx)+(vy*vy))
+end
+
 function exit()
     mg32_exit()
 end
@@ -218,16 +306,18 @@ function get_screen_size()
     return mg32_get_screen_size()
 end
 
+function draw(texture,x,y,z,bank)
+    mg32_draw_texture(bank,texture,x,y,z)
+end
+
 function draw_text(txt,x,y,z,bank)
     w,h,tw,th = get_bank_info(bank)
-    --print("* "..w.." "..h.." "..tw.." "..th)
 
     for n = 1, #txt do
         c = txt:byte(n)
 
         if (c>31 and c<127) then
             c = c - 32
-            --print(c)
             mg32_draw_texture(bank,c,x,y,z)
         end
         x = x + tw

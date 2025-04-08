@@ -209,6 +209,14 @@ int mg32_get_screen_size(lua_State* L)
     return 2;
 }
 
+int mg32_ticks(lua_State* L)
+{
+
+    lua_pushinteger(L, SDL_GetTicks());
+
+    return 1;
+}
+
 static void insert_command(mg32::DrawCommand* q, mg32::DrawCommand* t)
 {
     if (t->z<q->z) {
@@ -369,6 +377,9 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, mg32_get_screen_size);
     lua_setglobal(L, "mg32_get_screen_size");
+
+    lua_pushcfunction(L, mg32_ticks);
+    lua_setglobal(L, "mg32_ticks");
 
     lua_pushcfunction(L, mg32_draw_texture);
     lua_setglobal(L, "mg32_draw_texture");

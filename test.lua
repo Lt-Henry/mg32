@@ -48,7 +48,9 @@ function ball(x,y)
 
     local width,height = get_screen_size()
     local vx = 4
-    while true do
+    local timeout = 0
+
+    while timeout < 3000 do
         --print("tick")
         me.x = me.x + vx
         if me.x > width then
@@ -58,6 +60,9 @@ function ball(x,y)
         if me.x < 0 then
             vx = 4
         end
+
+        timeout = timeout + me.ticks
+
         frame()
     end
 
@@ -70,8 +75,9 @@ function enemy(x,y)
     me.texture = 2
     me.px = 16
     me.py = 16
-    me.radius = 16
-    me.shape = S_CIRCLE
+    me.width = 32
+    me.height = 32
+    me.shape = S_BOX
     
     while true do
     
@@ -122,6 +128,7 @@ function main()
 
     load_bank(0,32,32)
     load_bank(1,16,16)
+    load_bank(2,640,360)
     load_bank(32,7,9)
 
     create(player,8,16)
@@ -146,6 +153,7 @@ function main()
 
         x,y = get_mouse()
         draw_text("mouse:"..x..","..y,32,32,90,32)
+        draw(0,0,0,-100,2)
         sleep(15)
 
         frame()
