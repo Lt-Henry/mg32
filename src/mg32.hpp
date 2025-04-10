@@ -20,16 +20,20 @@ namespace mg32
 
     enum class Command
     {
-        Blit
+        Blit,
+        BlitEx
     };
 
     class DrawCommand
     {
         public:
 
-        Command cmd;
+        Command command;
 
         int z;
+        int flip;
+        double angle;
+        SDL_Point pivot;
 
         SDL_Texture* texture;
         SDL_Rect src;

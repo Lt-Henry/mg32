@@ -168,7 +168,15 @@ static void draw(mg32::DrawCommand* q)
             draw(q->left);
         }
 
-        SDL_RenderCopy(renderer,q->texture,&q->src,&q->dst);
+        switch (q->command) {
+            case mg32::Command::Blit:
+                SDL_RenderCopy(renderer,q->texture,&q->src,&q->dst);
+            break;
+
+            case mg32::Command::BlitEx:
+                SDL_RenderCopyEx(renderer,q->texture,&q->src,&q->dst,q->angle,&q->pivot,SDL_FLIP_NONE);
+            break;
+        }
 
         if (q->right) {
             draw(q->right);
@@ -257,6 +265,7 @@ int mg32_draw_texture(lua_State* L)
         int col = texture_id % numw;
 
         mg32::DrawCommand cmd;
+        cmd.command = mg32::Command::Blit;
         cmd.left = nullptr;
         cmd.right = nullptr;
 
@@ -282,23 +291,65 @@ int mg32_draw_texture(lua_State* L)
             mg32::DrawCommand* op = &commands.data()[size-1];
             insert_command(top, op);
         }
-        /*
-        SDL_Rect srect;
 
-        srect.x = col * tw;
-        srect.y = row * th;
-        srect.w = tw;
-        srect.h = th;
+    }
+    return 0;
+}
 
-        SDL_Rect drect;
+int mg32_draw_texture_ex(lua_State* L)
+{
+    int bank_id = lua_tonumber(L, 1);
+    int texture_id = lua_tonumber(L, 2);
+    int x = lua_tonumber(L, 3);
+    int y = lua_tonumber(L, 4);
+    int z = lua_tonumber(L, 5);
+    int flip = lua_tonumber(L, 6);
+    double angle = lua_tonumber(L, 7);
+    int px = lua_tonumber(L, 8);
+    int py = lua_tonumber(L, 9);
 
-        drect.x = x;
-        drect.y = y;
-        drect.w = tw;
-        drect.h = th;
+    mg32::Bank* bank = banks[bank_id];
 
-        SDL_RenderCopy(renderer,bank->data,&srect,&drect);
-        */
+    if (bank) {
+
+        int tw = bank->tile_width;
+        int th = bank->tile_height;
+        int numw = bank->width/tw;
+
+        int row = texture_id / numw;
+        int col = texture_id % numw;
+
+        mg32::DrawCommand cmd;
+        cmd.command = mg32::Command::BlitEx;
+        cmd.left = nullptr;
+        cmd.right = nullptr;
+
+        cmd.z = z;
+        cmd.angle = angle;
+        cmd.pivot.x = px;
+        cmd.pivot.y = py;
+
+        cmd.texture = bank->data;
+        cmd.src.x = col * tw;
+        cmd.src.y = row * th;
+        cmd.src.w = tw;
+        cmd.src.h = th;
+
+        cmd.dst.x = x;
+        cmd.dst.y = y;
+        cmd.dst.w = tw;
+        cmd.dst.h = th;
+
+        commands.push_back(cmd);
+
+        size_t size = commands.size();
+
+        if (size > 1) {
+            mg32::DrawCommand* top = &commands.data()[0];
+            mg32::DrawCommand* op = &commands.data()[size-1];
+            insert_command(top, op);
+        }
+
     }
     return 0;
 }
@@ -383,6 +434,9 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, mg32_draw_texture);
     lua_setglobal(L, "mg32_draw_texture");
+
+    lua_pushcfunction(L, mg32_draw_texture_ex);
+    lua_setglobal(L, "mg32_draw_texture_ex");
 
     SDL_Init(SDL_INIT_EVERYTHING);
 

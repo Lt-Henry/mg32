@@ -93,7 +93,11 @@ function frame()
                 elseif v.state == STATE_ALIVE then
                     v.ticks = ticks
                     coroutine.resume(v.thread)
-                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
+                    if v.angle == 0 then
+                        mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
+                    else
+                        mg32_draw_texture_ex(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z,0,v.angle,v.px,v.py)
+                    end
                     table.insert(_tmp,v)
                 end
             end
@@ -128,6 +132,8 @@ function create(p,...)
         -- pivot point
         px = 0,
         py = 0,
+
+        angle = 0,
 
         shape = S_POINT,
         radius = 0,
@@ -296,6 +302,14 @@ function point_dist(x1,x2,y1,y2)
     local vy = (y1  - y2)
 
     return math.sqrt((vx*vx)+(vy*vy))
+end
+
+function advance(steps)
+
+    local sx = steps * math.cos(math.rad(me.angle))
+    local sy = steps * math.sin(math.rad(me.angle))
+    me.x = me.x + sx
+    me.y = me.y + sy
 end
 
 function exit()
