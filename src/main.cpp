@@ -165,6 +165,42 @@ int gamepad_buttondown(lua_State* L)
     return 1;
 }
 
+int get_gamepad(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+    int axis = lua_tonumber(L, 2);
+    mg32::Gamepad* gp = gamepads[id];
+
+    if (gp) {
+        double x,y;
+
+        gp->get_axis(axis,x,y);
+
+        lua_pushnumber(L,x);
+        lua_pushnumber(L,y);
+
+        return 2;
+    }
+
+    lua_pushnumber(L,0);
+    lua_pushnumber(L,0);
+    return 2;
+}
+
+
+int gamepad_rumble(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+
+    mg32::Gamepad* gp = gamepads[id];
+
+    if (gp) {
+        gp->rumble();
+    }
+
+    return 0;
+}
+
 int sleep(lua_State* L)
 {
     int ms = lua_tonumber(L, 1);
@@ -189,6 +225,12 @@ int mg32_start_frame(lua_State* L)
     mouse_buttons = SDL_GetMouseState(&raw_mx, &raw_my);
     SDL_RenderWindowToLogical(renderer,raw_mx,raw_my,&mouse_x,&mouse_y);
 
+    for (auto p:gamepads) {
+        if (p.second) {
+            p.second->frame();
+        }
+    }
+
     SDL_Event event;
 
     while (SDL_PollEvent(&event)) {
@@ -201,7 +243,7 @@ int mg32_start_frame(lua_State* L)
                 
                 gamepads[event.cdevice.which] = new mg32::Gamepad(event.cdevice.which);
                 clog<<"gamepad added:"<<event.cdevice.which<<endl;
-                //clog<<"rumble:"<<SDL_GameControllerHasRumble(gamepads[event.cdevice.which])<<endl;
+
             break;
             
             case SDL_CONTROLLERDEVICEREMOVED:
@@ -212,7 +254,7 @@ int mg32_start_frame(lua_State* L)
             
             case SDL_CONTROLLERBUTTONDOWN:
             case SDL_CONTROLLERBUTTONUP:
-                clog<<"button event"<<endl;
+                //clog<<"button event"<<endl;
                 gamepads[event.cbutton.which]->update(event);
             break;
         }
@@ -482,6 +524,12 @@ int main(int argc, char* argv[])
     
     lua_pushcfunction(L, gamepad_buttondown);
     lua_setglobal(L, "gamepad_buttondown");
+
+    lua_pushcfunction(L, get_gamepad);
+    lua_setglobal(L, "get_gamepad");
+
+    lua_pushcfunction(L, gamepad_rumble);
+    lua_setglobal(L, "gamepad_rumble");
 
     lua_pushcfunction(L, sleep);
     lua_setglobal(L, "sleep");

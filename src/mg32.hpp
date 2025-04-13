@@ -57,7 +57,11 @@ namespace mg32
         
         int button(int btn);
         int buttondown(int btn);
+        void get_axis(int axis,double& x,double& y);
+        void rumble();
         
         void update(SDL_Event& event);
+
+        void frame();
     };
 }

@@ -48,8 +48,27 @@ M_LEFT = 1
 M_MIDDLE = 2
 M_RIGHT = 3
 
+-- gamepad buttons
 GP_A = 0
 GP_B = 1
+GP_X = 2
+GP_Y = 3
+GP_BACK = 4
+GP_GUIDE = 5
+GP_START = 6
+GP_LEFT_STICK = 7
+GP_RIGHT_STICK = 8
+GP_LEFT_SHOULDER = 9
+GP_RIGHT_SHOULDER = 10
+GP_DPAD_UP = 11
+GP_DPAD_DOWN = 12
+GP_DPAD_LEFT = 13
+GP_DPAD_RIGHT = 14
+
+-- gamepad axis
+GP_LEFT = 0
+GP_RIGHT = 2
+GP_TRIGGER = 4
 
 -- shape
 S_POINT = 0
