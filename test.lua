@@ -142,7 +142,7 @@ function main()
             kill(p)
         end
 
-        if keydown(K_E) then
+        if keydown(K_E) or gamepad_buttondown(0,GC_A) then
             create(enemy,math.random(width),math.random(height))
         end
         
@@ -153,6 +153,8 @@ function main()
 
         x,y = get_mouse()
         draw_text("mouse:"..x..","..y,32,32,90,32)
+        draw_text("process count:"..#_process,320,32,90,32)
+        draw_text("gamepad:"..tostring(gamepad_button(0,GP_A)),480,32,90,32)
         draw(0,0,0,-100,2)
         sleep(15)
 

@@ -26,6 +26,8 @@ float mouse_y;
 uint32_t mouse_buttons;
 uint32_t mouse_buttons_last;
 
+map<int, mg32::Gamepad*> gamepads;
+
 SDL_Window* window;
 SDL_Renderer* renderer;
 
@@ -127,6 +129,42 @@ int hide_cursor(lua_State* L)
     return 0;
 }
 
+int gamepad_button(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+    int what = lua_tonumber(L, 2);
+    
+    mg32::Gamepad* gp = gamepads[id];
+    
+    int value = 0;
+    
+    if (gp) {
+        value = gp->button(what);
+    }
+    
+    lua_pushboolean(L,value);
+    
+    return 1;
+}
+
+int gamepad_buttondown(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+    int what = lua_tonumber(L, 2);
+    
+    mg32::Gamepad* gp = gamepads[id];
+    
+    int value = 0;
+    
+    if (gp) {
+        value = gp->buttondown(what);
+    }
+    
+    lua_pushboolean(L,value);
+    
+    return 1;
+}
+
 int sleep(lua_State* L)
 {
     int ms = lua_tonumber(L, 1);
@@ -151,10 +189,35 @@ int mg32_start_frame(lua_State* L)
     mouse_buttons = SDL_GetMouseState(&raw_mx, &raw_my);
     SDL_RenderWindowToLogical(renderer,raw_mx,raw_my,&mouse_x,&mouse_y);
 
-    if (SDL_HasEvent(SDL_QUIT)) {
-        exit(0);
-    }
+    SDL_Event event;
 
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+            case SDL_QUIT:
+                exit(0);
+            break;
+            
+            case SDL_CONTROLLERDEVICEADDED:
+                
+                gamepads[event.cdevice.which] = new mg32::Gamepad(event.cdevice.which);
+                clog<<"gamepad added:"<<event.cdevice.which<<endl;
+                //clog<<"rumble:"<<SDL_GameControllerHasRumble(gamepads[event.cdevice.which])<<endl;
+            break;
+            
+            case SDL_CONTROLLERDEVICEREMOVED:
+                clog<<"gamepad removed"<<endl;
+                delete gamepads[event.cdevice.which];
+                gamepads[event.cdevice.which] = nullptr;
+            break;
+            
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+                clog<<"button event"<<endl;
+                gamepads[event.cbutton.which]->update(event);
+            break;
+        }
+    }
+    
     //commands.clear();
 
     return 0;
@@ -413,6 +476,12 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, hide_cursor);
     lua_setglobal(L, "hide_cursor");
+    
+    lua_pushcfunction(L, gamepad_button);
+    lua_setglobal(L, "gamepad_button");
+    
+    lua_pushcfunction(L, gamepad_buttondown);
+    lua_setglobal(L, "gamepad_buttondown");
 
     lua_pushcfunction(L, sleep);
     lua_setglobal(L, "sleep");

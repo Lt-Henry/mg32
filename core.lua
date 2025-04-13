@@ -48,6 +48,9 @@ M_LEFT = 1
 M_MIDDLE = 2
 M_RIGHT = 3
 
+GP_A = 0
+GP_B = 1
+
 -- shape
 S_POINT = 0
 S_CIRCLE = 1

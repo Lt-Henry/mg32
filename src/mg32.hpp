@@ -42,4 +42,22 @@ namespace mg32
         DrawCommand* left;
         DrawCommand* right;
     };
+    
+    class Gamepad
+    {
+        public:
+        
+        int id;
+        SDL_GameController* gc;
+        int buttons[32];
+        int buttons_last[32];
+        
+        Gamepad(int which);
+        virtual ~Gamepad();
+        
+        int button(int btn);
+        int buttondown(int btn);
+        
+        void update(SDL_Event& event);
+    };
 }
