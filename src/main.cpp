@@ -36,16 +36,20 @@ vector<mg32::DrawCommand> commands;
 int load_bank(lua_State* L)
 {
     int id = lua_tonumber(L, 1);
-    int tw = lua_tonumber(L, 2);
-    int th = lua_tonumber(L, 3);
+    const char* filename = lua_tostring(L, 2);
+    int tw = lua_tonumber(L, 3);
+    int th = lua_tonumber(L, 4);
 
-    stringstream ss;
+    if (banks[id]!=nullptr) {
+        delete banks[id];
+        banks[id] = nullptr;
+    }
 
-    ss<<id<<".png";
+    banks[id] = new mg32::Bank(renderer, filename, tw, th);
 
-    banks[id] = new mg32::Bank(renderer, ss.str(), tw, th);
+    lua_pushinteger(L, id);
 
-    return 0;
+    return 1;
 }
 
 int get_bank_info(lua_State* L)
@@ -210,6 +214,7 @@ int sleep(lua_State* L)
 
 int mg32_start_frame(lua_State* L)
 {
+
     SDL_RenderClear(renderer);
 
     for (size_t n = 0;n < SDL_NUM_SCANCODES; n++) {
@@ -320,6 +325,16 @@ int mg32_get_screen_size(lua_State* L)
     lua_pushinteger(L,h);
 
     return 2;
+}
+
+int mg32_set_screen_color(lua_State* L)
+{
+    int r = lua_tonumber(L,1);
+    int g = lua_tonumber(L,2);
+    int b = lua_tonumber(L,3);
+    SDL_SetRenderDrawColor(renderer,r,g,b,255);
+
+    return 0;
 }
 
 int mg32_ticks(lua_State* L)
@@ -545,6 +560,9 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, mg32_get_screen_size);
     lua_setglobal(L, "mg32_get_screen_size");
+
+    lua_pushcfunction(L, mg32_set_screen_color);
+    lua_setglobal(L, "mg32_set_screen_color");
 
     lua_pushcfunction(L, mg32_ticks);
     lua_setglobal(L, "mg32_ticks");

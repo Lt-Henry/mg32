@@ -145,7 +145,7 @@ function create(p,...)
         args = {...},
         parent = me,
 
-        bank = 0,
+        bank = -1,
         texture = 0,
         x = 0,
         y = 0,
@@ -340,6 +340,10 @@ end
 
 function get_screen_size()
     return mg32_get_screen_size()
+end
+
+function set_screen_color(r,g,b)
+    mg32_set_screen_color(r,g,b)
 end
 
 function draw(texture,x,y,z,bank)
