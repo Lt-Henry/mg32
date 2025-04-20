@@ -172,6 +172,10 @@ function create(p,...)
     return child
 end
 
+function is_dead(p)
+    return p.state == STATE_DEAD
+end
+
 function kill(p)
     if p then
         p.state = STATE_DEAD
@@ -197,6 +201,7 @@ function all(p)
     for k,v in pairs(_process) do
         if v.fn == p and v.state == STATE_ALIVE then
             tmp[k] = v
+            --table.insert(tmp,v)
         end
     end
 
@@ -206,93 +211,99 @@ end
 function collision(a)
     local b = me
     local p = nil
+
+    if is_dead(b) then
+        return nil
+    end
+
     for k,v in pairs(all(a)) do
+        if is_dead(v) == false then
 
-        if b.shape == S_CIRCLE and v.shape == S_CIRCLE then
-            if dist(v,b) < (v.radius + b.radius) then
-                p = v
-                break
-            end
-        end
-
-        if b.shape == S_POINT and v.shape == S_CIRCLE then
-            if dist(v,b) < v.radius then
-                p = v
-                break
-            end
-        end
-
-        if b.shape == S_CIRCLE and v.shape == S_POINT then
-            if dist(v,b) < b.radius then
-                p = v
-                break
-            end
-        end
-
-        if b.shape == S_POINT and v.shape == S_POINT then
-            if dist(v,b) < 1 then
-                p = v
-                break
-            end
-        end
-
-        if b.shape == S_POINT and v.shape == S_BOX then
-            local wh = v.width/2
-            local hh = v.height/2
-
-            local x1 = v.x - wh
-            local x2 = v.x + wh
-            local y1 = v.y - hh
-            local y2 = v.y + hh
-
-            if b.x>= x1 and b.x<=x2 and b.y>=y1 and b.y<=y2 then
-                p = v
-                break
-            end
-        end
-
-        if b.shape == S_BOX and v.shape == S_POINT then
-            local wh = b.width/2
-            local hh = b.height/2
-
-            local x1 = b.x - wh
-            local x2 = b.x + wh
-            local y1 = b.y - hh
-            local y2 = b.y + hh
-
-            if v.x>= x1 and v.x<=x2 and v.y>=y1 and v.y<=y2 then
-                p = v
-                break
-            end
-        end
-
-        if b.shape == S_BOX and v.shape == S_CIRCLE then
-            local wh = b.width/2
-            local hh = b.height/2
-
-            local x1 = b.x - wh
-            local x2 = b.x + wh
-            local y1 = b.y - hh
-            local y2 = b.y + hh
-
-            local testx = v.x
-            local testy = v.y
-
-            if v.x < x1 then testx = x1 end
-            if v.x > x2 then testx = x2 end
-            if v.y < y1 then testy = y1 end
-            if v.y > y2 then testy = y2 end
-
-            local distx = v.x - testx
-            local disty = v.y - testy
-
-            local distt = math.sqrt( (distx*distx) + (disty*disty))
-
-            if distt < v.radius then
-                p = v
-                break
+            if b.shape == S_CIRCLE and v.shape == S_CIRCLE then
+                if dist(v,b) < (v.radius + b.radius) then
+                    p = v
+                    break
+                end
             end
 
+            if b.shape == S_POINT and v.shape == S_CIRCLE then
+                if dist(v,b) < v.radius then
+                    p = v
+                    break
+                end
+            end
+
+            if b.shape == S_CIRCLE and v.shape == S_POINT then
+                if dist(v,b) < b.radius then
+                    p = v
+                    break
+                end
+            end
+
+            if b.shape == S_POINT and v.shape == S_POINT then
+                if dist(v,b) < 1 then
+                    p = v
+                    break
+                end
+            end
+
+            if b.shape == S_POINT and v.shape == S_BOX then
+                local wh = v.width/2
+                local hh = v.height/2
+
+                local x1 = v.x - wh
+                local x2 = v.x + wh
+                local y1 = v.y - hh
+                local y2 = v.y + hh
+
+                if b.x>= x1 and b.x<=x2 and b.y>=y1 and b.y<=y2 then
+                    p = v
+                    break
+                end
+            end
+
+            if b.shape == S_BOX and v.shape == S_POINT then
+                local wh = b.width/2
+                local hh = b.height/2
+
+                local x1 = b.x - wh
+                local x2 = b.x + wh
+                local y1 = b.y - hh
+                local y2 = b.y + hh
+
+                if v.x>= x1 and v.x<=x2 and v.y>=y1 and v.y<=y2 then
+                    p = v
+                    break
+                end
+            end
+
+            if b.shape == S_BOX and v.shape == S_CIRCLE then
+                local wh = b.width/2
+                local hh = b.height/2
+
+                local x1 = b.x - wh
+                local x2 = b.x + wh
+                local y1 = b.y - hh
+                local y2 = b.y + hh
+
+                local testx = v.x
+                local testy = v.y
+
+                if v.x < x1 then testx = x1 end
+                if v.x > x2 then testx = x2 end
+                if v.y < y1 then testy = y1 end
+                if v.y > y2 then testy = y2 end
+
+                local distx = v.x - testx
+                local disty = v.y - testy
+
+                local distt = math.sqrt( (distx*distx) + (disty*disty))
+
+                if distt < v.radius then
+                    p = v
+                    break
+                end
+            end
         end
     end
 

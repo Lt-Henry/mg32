@@ -578,7 +578,7 @@ int main(int argc, char* argv[])
     window = SDL_CreateWindow("MG32",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              640*2,360*2,0/*SDL_WINDOW_FULLSCREEN_DESKTOP*/);
+                              640*2,360*2,SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_RenderSetLogicalSize(renderer, 640,360);
