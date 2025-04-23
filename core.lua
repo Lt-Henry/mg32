@@ -75,6 +75,11 @@ S_POINT = 0
 S_CIRCLE = 1
 S_BOX = 2
 
+F_NORMAL = 0
+F_HORIZONTAL = 1
+F_VERTICAL = 2
+F_HORIZONTAL_AND_VERTICAL = 3
+
 me = nil
 _process = {}
 _process_frame = {}
@@ -99,31 +104,37 @@ function frame()
         local ticks = current_ticks - _last_ticks
         _last_ticks = current_ticks
 
-        _tmp = {}
+        local _tmp = {}
 
         -- iterate over process
         for k,v in pairs(_process) do
             me = v
-            status = coroutine.status(v.thread)
+            local status = coroutine.status(v.thread)
             --print(status)
             if status == "suspended" then
                 if v.state == STATE_BORN then
                     v.state = STATE_ALIVE
                     coroutine.resume(v.thread,table.unpack(v.args))
-                    mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
-                    table.insert(_tmp,v)
                 elseif v.state == STATE_ALIVE then
                     v.ticks = ticks
                     coroutine.resume(v.thread)
-                    if v.angle == 0 then
-                        mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
-                    else
-                        mg32_draw_texture_ex(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z,0,v.angle,v.px,v.py)
-                    end
-                    table.insert(_tmp,v)
                 end
+
+                local current_status = coroutine.status(v.thread)
+
+                if current_status == "suspended" then
+                    table.insert(_tmp,v)
+
+                    if v.angle ~= 0 or v.flip ~= F_NORMAL then
+                        mg32_draw_texture_ex(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z,v.flip,v.angle,v.px,v.py)
+                    else
+                        mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
+                    end
+                end
+
             end
         end
+
         _process = _tmp
         me = nil
         mg32_end_frame()
@@ -156,6 +167,7 @@ function create(p,...)
         py = 0,
 
         angle = 0,
+        flip = F_NORMAL,
 
         shape = S_POINT,
         radius = 0,

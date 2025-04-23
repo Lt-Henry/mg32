@@ -284,7 +284,7 @@ static void draw(mg32::DrawCommand* q)
             break;
 
             case mg32::Command::BlitEx:
-                SDL_RenderCopyEx(renderer,q->texture,&q->src,&q->dst,q->angle,&q->pivot,SDL_FLIP_NONE);
+                SDL_RenderCopyEx(renderer,q->texture,&q->src,&q->dst,q->angle,&q->pivot,static_cast<SDL_RendererFlip>(q->flip));
             break;
         }
 
@@ -446,6 +446,7 @@ int mg32_draw_texture_ex(lua_State* L)
 
         cmd.z = z;
         cmd.angle = angle;
+        cmd.flip = flip;
         cmd.pivot.x = px;
         cmd.pivot.y = py;
 
@@ -580,7 +581,7 @@ int main(int argc, char* argv[])
                               SDL_WINDOWPOS_CENTERED,
                               640*2,360*2,SDL_WINDOW_FULLSCREEN_DESKTOP);
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 640,360);
 
     SDL_PumpEvents();
