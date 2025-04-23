@@ -172,6 +172,10 @@ function create(p,...)
     return child
 end
 
+function type_of(p)
+    return p.fn
+end
+
 function is_dead(p)
     return p.state == STATE_DEAD
 end
@@ -207,6 +211,37 @@ function all(p)
 
     return tmp
 end
+
+function create_box(a)
+    if not a then
+        a = me
+    end
+
+    local w,h,tw,th = get_bank_info(a.bank)
+
+    a.shape = S_BOX
+    a.width = tw
+    a.height = th
+    a.px = tw/2
+    a.py = th/2
+end
+
+function create_circle(a)
+if not a then
+    a = me
+    end
+
+    local w,h,tw,th = get_bank_info(a.bank)
+
+    a.shape = S_CIRCLE
+
+    a.radius = tw
+    if th>tw then a.radius = th end
+
+    a.px = tw/2
+    a.py = th/2
+end
+
 
 function collision(a)
     local b = me
@@ -335,6 +370,30 @@ function point_dist(x1,x2,y1,y2)
     local vy = (y1  - y2)
 
     return math.sqrt((vx*vx)+(vy*vy))
+end
+
+function angle(a,b)
+    if not b then
+        b = me
+    end
+
+    local vx = a.x - b.x
+    local vy = a.y - b.y
+
+    local vd = math.sqrt((vx*vx)+(vy*vy))
+
+    vx = vx/vd
+    vy = vy/vd
+
+    local cos_alpha = vx*1 + vy*0
+
+    local degrees = math.deg(math.acos(cos_alpha))
+
+    if (vy<0) then
+        degrees = 360 - degrees
+    end
+
+    return degrees
 end
 
 function advance(steps)
