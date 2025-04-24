@@ -18,13 +18,15 @@ using namespace std;
 
 map<int,mg32::Bank*> banks;
 
-const uint8_t* keyboard;
+vector<uint8_t> keyboard;
 vector<uint8_t> keyboard_last;
 
 float mouse_x;
 float mouse_y;
-uint32_t mouse_buttons;
-uint32_t mouse_buttons_last;
+
+#define MAX_MOUSE_BUTTONS 8
+vector<uint8_t> mouse_buttons;
+vector<uint8_t> mouse_buttons_last;
 
 map<int, mg32::Gamepad*> gamepads;
 
@@ -94,7 +96,7 @@ int button(lua_State* L)
 {
     int btn = lua_tonumber(L, 1);
 
-    lua_pushboolean(L,SDL_BUTTON(btn) & mouse_buttons);
+    lua_pushboolean(L, mouse_buttons[btn]);
 
     return 1;
 }
@@ -103,9 +105,7 @@ int buttondown(lua_State* L)
 {
     int btn = lua_tonumber(L, 1);
 
-    uint32_t last = SDL_BUTTON(btn) & mouse_buttons_last;
-    uint32_t now = SDL_BUTTON(btn) & mouse_buttons;
-    lua_pushboolean(L,now > last);
+    lua_pushboolean(L, mouse_buttons[btn] > mouse_buttons_last[btn]);
 
     return 1;
 }
@@ -221,14 +221,9 @@ int mg32_start_frame(lua_State* L)
         keyboard_last[n] = keyboard[n];
     }
 
-    mouse_buttons_last = mouse_buttons;
-
-    SDL_PumpEvents();
-    keyboard = SDL_GetKeyboardState(nullptr);
-
-    int raw_mx,raw_my;
-    mouse_buttons = SDL_GetMouseState(&raw_mx, &raw_my);
-    SDL_RenderWindowToLogical(renderer,raw_mx,raw_my,&mouse_x,&mouse_y);
+    for (size_t n = 0;n < MAX_MOUSE_BUTTONS; n++) {
+        mouse_buttons_last[n] = mouse_buttons[n];
+    }
 
     for (auto p:gamepads) {
         if (p.second) {
@@ -261,6 +256,31 @@ int mg32_start_frame(lua_State* L)
             case SDL_CONTROLLERBUTTONUP:
                 //clog<<"button event"<<endl;
                 gamepads[event.cbutton.which]->update(event);
+            break;
+            
+            case SDL_KEYDOWN:
+                keyboard[event.key.keysym.scancode] = 1;
+            break;
+            
+            case SDL_KEYUP:
+                keyboard[event.key.keysym.scancode] = 0;
+            break;
+            
+            case SDL_MOUSEMOTION:
+                mouse_x = event.motion.x;
+                mouse_y = event.motion.y;
+            break;
+            
+            case SDL_MOUSEBUTTONDOWN:
+                mouse_buttons[event.button.button] = 1;
+                mouse_x = event.button.x;
+                mouse_y = event.button.y;
+            break;
+            
+            case SDL_MOUSEBUTTONUP:
+                mouse_buttons[event.button.button] = 0;
+                mouse_x = event.button.x;
+                mouse_y = event.button.y;
             break;
         }
     }
@@ -579,15 +599,32 @@ int main(int argc, char* argv[])
     window = SDL_CreateWindow("MG32",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              640*2,360*2,SDL_WINDOW_FULLSCREEN_DESKTOP);
+                              640*2,360*2,0);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 640,360);
+    
+    SDL_StopTextInput();
 
-    SDL_PumpEvents();
-    keyboard = SDL_GetKeyboardState(nullptr);
+    //SDL_PumpEvents();
+    //keyboard = SDL_GetKeyboardState(nullptr);
+    keyboard.reserve(SDL_NUM_SCANCODES);
     keyboard_last.reserve(SDL_NUM_SCANCODES);
-
+    
+    for (size_t n = 0;n < SDL_NUM_SCANCODES; n++) {
+        keyboard_last[n] = 0;
+        keyboard[n] = 0;
+    }
+    
+    
+    mouse_buttons.reserve(MAX_MOUSE_BUTTONS);
+    mouse_buttons_last.reserve(MAX_MOUSE_BUTTONS);
+    
+    for (size_t n = 0; n < MAX_MOUSE_BUTTONS; n++) {
+        mouse_buttons[n] = 0;
+        mouse_buttons_last[n] = 0;
+    }
+    
     commands.reserve(1024);
 
     lua_getglobal(L, "main");
