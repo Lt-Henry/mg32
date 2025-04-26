@@ -111,7 +111,11 @@ function frame()
             me = v
             local status = coroutine.status(v.thread)
             --print(status)
-            if status == "suspended" then
+            if status ~= "suspended" then
+                print(status)
+            end
+            
+            if status == "suspended" and v.state ~= STATE_DEAD then
                 if v.state == STATE_BORN then
                     v.state = STATE_ALIVE
                     coroutine.resume(v.thread,table.unpack(v.args))
@@ -130,8 +134,13 @@ function frame()
                     else
                         mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     end
+                
+                elseif current_status == "dead" then
+                    v.state = STATE_DEAD
                 end
 
+            elseif status == "dead" then
+                v.state = STATE_DEAD
             end
         end
 
@@ -190,6 +199,10 @@ end
 
 function is_dead(p)
     return p.state == STATE_DEAD
+end
+
+function is_alive(p)
+    return p.state ~= STATE_DEAD
 end
 
 function kill(p)
