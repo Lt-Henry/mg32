@@ -169,7 +169,7 @@ int gamepad_buttondown(lua_State* L)
     return 1;
 }
 
-int get_gamepad(lua_State* L)
+int gamepad_joystick(lua_State* L)
 {
     int id = lua_tonumber(L, 1);
     int axis = lua_tonumber(L, 2);
@@ -561,8 +561,8 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, gamepad_buttondown);
     lua_setglobal(L, "gamepad_buttondown");
 
-    lua_pushcfunction(L, get_gamepad);
-    lua_setglobal(L, "get_gamepad");
+    lua_pushcfunction(L, gamepad_joystick);
+    lua_setglobal(L, "gamepad_joystick");
 
     lua_pushcfunction(L, gamepad_rumble);
     lua_setglobal(L, "gamepad_rumble");
@@ -599,7 +599,7 @@ int main(int argc, char* argv[])
     window = SDL_CreateWindow("MG32",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              640*2,360*2,0);
+                              640*2,360*2,SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 640,360);

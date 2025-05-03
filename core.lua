@@ -65,7 +65,7 @@ GP_DPAD_DOWN = 12
 GP_DPAD_LEFT = 13
 GP_DPAD_RIGHT = 14
 
--- gamepad axis
+-- gamepad joystick
 GP_LEFT = 0
 GP_RIGHT = 2
 GP_TRIGGER = 4
@@ -75,10 +75,14 @@ S_POINT = 0
 S_CIRCLE = 1
 S_BOX = 2
 
+--flip mode
 F_NORMAL = 0
 F_HORIZONTAL = 1
 F_VERTICAL = 2
 F_HORIZONTAL_AND_VERTICAL = 3
+
+Z_TOP = 256
+Z_BOTTOM = -256
 
 me = nil
 _process = {}
@@ -164,6 +168,8 @@ function create(p,...)
         state = STATE_BORN,
         args = {...},
         parent = me,
+        
+        mode = 0,
 
         bank = -1,
         texture = 0,
@@ -226,15 +232,25 @@ end
 
 function all(p)
     local tmp = {}
-
+    local n = 1
     for k,v in pairs(_process) do
         if v.fn == p and v.state == STATE_ALIVE then
-            tmp[k] = v
+            tmp[n] = v
             --table.insert(tmp,v)
+            n = n + 1
         end
     end
 
     return tmp
+end
+
+function wait(ms)
+    local count = 0
+    
+    while count<ms do
+        count = count + me.ticks
+        frame()
+    end
 end
 
 function create_box(a)
