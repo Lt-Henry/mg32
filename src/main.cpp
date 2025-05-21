@@ -17,6 +17,7 @@
 using namespace std;
 
 map<int,mg32::Bank*> banks;
+map<int,mg32::Sample*> samples;
 
 vector<uint8_t> keyboard;
 vector<uint8_t> keyboard_last;
@@ -34,6 +35,12 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 
 vector<mg32::DrawCommand> commands;
+
+SDL_AudioDeviceID pb_device_id;
+SDL_AudioSpec pbspec;
+
+#define MAX_STREAMS 16
+mg32::Stream streams[MAX_STREAMS];
 
 int load_bank(lua_State* L)
 {
@@ -66,6 +73,38 @@ int get_bank_info(lua_State* L)
     lua_pushinteger(L,bank->tile_height);
 
     return 4;
+}
+
+int load_sample(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+    const char* filename = lua_tostring(L, 2);
+
+    if (samples[id] != nullptr) {
+        delete samples[id];
+        samples[id] = nullptr;
+    }
+
+    samples[id] = new mg32::Sample(filename, pbspec);
+
+    lua_pushinteger(L, id);
+
+    return 1;
+}
+
+int play_sample(lua_State* L)
+{
+    int id = lua_tonumber(L, 1);
+
+    mg32::Sample* sample = samples[id];
+
+    if (sample) {
+        for (size_t n=0;n<MAX_STREAMS;n++) {
+
+        }
+    }
+
+    return 0;
 }
 
 int key(lua_State* L)
@@ -495,6 +534,24 @@ int mg32_draw_texture_ex(lua_State* L)
     return 0;
 }
 
+void audio_pb_cb(void* userdata, uint8_t* stream, int len )
+{
+    //Copy audio to stream
+    //std::memcpy(stream, &gRecordingBuffer[ gBufferBytePosition ], len);
+
+    //Move along buffer
+    //gBufferBytePosition += len;
+    for (int n=0;n<len;n++) {
+
+        stream[n] = samplebuf[samplepos];
+        samplepos++;
+
+        if (samplepos == samplelen) {
+            samplepos = 0;
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     if (argc<2) {
@@ -626,6 +683,22 @@ int main(int argc, char* argv[])
     }
     
     commands.reserve(1024);
+
+    // audio setup
+
+    pbspec.freq = 44100;
+    pbspec.format = AUDIO_S16;
+    pbspec.channels = 2;
+    pbspec.samples = 4096;
+    pbspec.callback = audio_pb_cb;
+
+    pb_device_id = SDL_OpenAudioDevice( nullptr, SDL_FALSE, &pbspec, &pbspec, SDL_AUDIO_ALLOW_FORMAT_CHANGE );
+
+    if (pb_device_id == 0) {
+        cerr<<"Failed to open audio playback device"<<endl;
+    }
+
+    SDL_PauseAudioDevice(pb_device_id,0);
 
     lua_getglobal(L, "main");
 

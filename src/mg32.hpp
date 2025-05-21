@@ -64,4 +64,24 @@ namespace mg32
 
         void frame();
     };
+
+    class Sample
+    {
+        public:
+
+        uint8_t* buffer;
+        uint32_t size;
+        SDL_AudioSpec spec;
+
+        Sample(std::string filename, SDL_AudioSpec spec);
+    };
+
+    class Stream
+    {
+        public:
+
+        Sample* sample;
+        uint32_t pos;
+        uint32_t flags;
+    };
 }

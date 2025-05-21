@@ -83,3 +83,10 @@ void Gamepad::frame()
         buttons_last[n] = buttons[n] ;
     }
 }
+
+void Sample::Sample(string filename, SDL_AudioSpec spec)
+{
+    this->spec = spec;
+
+    SDL_LoadWAV(filename,&spec,&buffer,&size);
+}
