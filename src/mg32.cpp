@@ -84,9 +84,9 @@ void Gamepad::frame()
     }
 }
 
-void Sample::Sample(string filename, SDL_AudioSpec spec)
+Sample::Sample(string filename, SDL_AudioSpec spec)
 {
     this->spec = spec;
 
-    SDL_LoadWAV(filename,&spec,&buffer,&size);
+    SDL_LoadWAV(filename.c_str(),&spec,&buffer,&size);
 }

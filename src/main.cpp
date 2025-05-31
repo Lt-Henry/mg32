@@ -100,7 +100,12 @@ int play_sample(lua_State* L)
 
     if (sample) {
         for (size_t n=0;n<MAX_STREAMS;n++) {
-
+            if (!streams[n].sample) {
+                streams[n].flags = 0;
+                streams[n].pos = 0;
+                streams[n].sample = sample;
+                break;
+            }
         }
     }
 
@@ -536,19 +541,30 @@ int mg32_draw_texture_ex(lua_State* L)
 
 void audio_pb_cb(void* userdata, uint8_t* stream, int len )
 {
-    //Copy audio to stream
-    //std::memcpy(stream, &gRecordingBuffer[ gBufferBytePosition ], len);
 
-    //Move along buffer
-    //gBufferBytePosition += len;
-    for (int n=0;n<len;n++) {
+    for (int n=0;n<len;n+=4) {
 
-        stream[n] = samplebuf[samplepos];
-        samplepos++;
+        int32_t left = 0;
+        int32_t right = 0;
 
-        if (samplepos == samplelen) {
-            samplepos = 0;
+        for (int m=0;m<MAX_STREAMS;m++) {
+            if (streams[m].sample) {
+                if (streams[m].pos >= streams[m].sample->size) {
+                    streams[m].sample = nullptr;
+                }
+                else {
+                    int16_t* sptr = (int16_t *) (streams[m].sample->buffer + streams[m].pos);
+                    left = left + sptr[0];
+                    right = right + sptr[1];
+
+                    streams[m].pos = streams[m].pos + 4; //s16 left and right channels
+                }
+            }
         }
+
+        int16_t* ptr = (int16_t*)(stream + n);
+        ptr[0] = std::min(std::max(left, -32768), 32767);
+        ptr[1] = std::min(std::max(right, -32768), 32767);
     }
 }
 
@@ -590,6 +606,12 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, get_bank_info);
     lua_setglobal(L, "get_bank_info");
+
+    lua_pushcfunction(L, load_sample);
+    lua_setglobal(L, "load_sample");
+
+    lua_pushcfunction(L, play_sample);
+    lua_setglobal(L, "play_sample");
 
     lua_pushcfunction(L, key);
     lua_setglobal(L, "key");
