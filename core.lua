@@ -453,6 +453,10 @@ function get_screen_size()
     return mg32_get_screen_size()
 end
 
+function set_screen_size(w,h)
+    return mg32_set_screen_size(w,h)
+end
+
 function set_screen_color(r,g,b)
     mg32_set_screen_color(r,g,b)
 end

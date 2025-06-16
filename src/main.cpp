@@ -383,12 +383,22 @@ int mg32_get_screen_size(lua_State* L)
 {
     int w,h;
 
-    //SDL_GetRendererOutputSize(renderer,&w,&h);
     SDL_RenderGetLogicalSize(renderer,&w,&h);
     lua_pushinteger(L,w);
     lua_pushinteger(L,h);
 
     return 2;
+}
+
+int mg32_set_screen_size(lua_State* L)
+{
+    int w = lua_tonumber(L,1);
+    int h = lua_tonumber(L,2);
+    
+    //SDL_GetRendererOutputSize(renderer,&w,&h);
+    SDL_RenderSetLogicalSize(renderer, w,h);
+    
+    return 0;
 }
 
 int mg32_set_screen_color(lua_State* L)
