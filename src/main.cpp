@@ -13,6 +13,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <filesystem>
 
 using namespace std;
 
@@ -589,7 +590,23 @@ int main(int argc, char* argv[])
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
 
-    status = luaL_loadfile(L, "core.lua");
+    string core_version="1";
+    string core_path = "core.lua";
+    
+    if (!std::filesystem::exists(core_path)) {
+        core_path = "/usr/local/lib/mg32/r" + core_version + "/core.lua";
+        
+        if (!std::filesystem::exists(core_path)) {
+            core_path = "/usr/lib/mg32/r" + core_version + "/core.lua";
+            
+            if (!std::filesystem::exists(core_path)) {
+                cerr<<"Could not find core.lua"<<endl;
+                return -1;
+            }
+        }
+    }
+    
+    status = luaL_loadfile(L, core_path);
     if(status != LUA_OK) {
         cerr<<"Failed to load core"<<endl;
         return -1;
