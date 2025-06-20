@@ -217,6 +217,22 @@ function kill(p)
     end
 end
 
+function _killtree_r(p)
+    for k,v in pairs(_process) do
+        if v.state ~= STATE_DEAD and v.parent == p then
+            v.state = STATE_DEAD
+            _killtree_r(v)
+        end
+    end
+end
+
+function killtree(p)
+    if p then
+        p.state = STATE_DEAD
+    end
+    _killtree_r(p)
+end
+
 function find(p)
     local found = nil
 
