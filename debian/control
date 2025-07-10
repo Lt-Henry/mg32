@@ -1,0 +1,13 @@
+Source: mg32
+Section: games
+Priority: optional
+Maintainer: Enrique Medina Gremaldos <quique@necos.es>
+Build-Depends: debhelper-compat (=13), meson, ninja-build, g++ (>=11)
+Standards-Version: 4.6.0
+Homepage: https://github.com/Lt-Henry/mg32
+
+Package: mg32
+Architecture: amd64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: Simple game making tool
+ Game making tool based on lua language with wrapped coroutines
