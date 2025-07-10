@@ -606,7 +606,7 @@ int main(int argc, char* argv[])
         }
     }
     
-    status = luaL_loadfile(L, core_path);
+    status = luaL_loadfile(L, core_path.c_str());
     if(status != LUA_OK) {
         cerr<<"Failed to load core"<<endl;
         return -1;
