@@ -8,5 +8,6 @@ lua = dependency('lua54-c++')
 
 executable('mg32', ['main.cpp','mg32.cpp'],
     cpp_args:['-std=c++11','-Wfatal-errors'],
-    dependencies: [libm,sdl2,sdl2_image,lua]
+    dependencies: [libm,sdl2,sdl2_image,lua],
+    install: true
     )
