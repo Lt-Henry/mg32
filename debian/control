@@ -8,6 +8,6 @@ Homepage: https://github.com/Lt-Henry/mg32
 
 Package: mg32
 Architecture: amd64
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: libc6, libstdc++6, libgcc-s1, liblua5.4-0, libsdl2-2.0-0, libsdl2-image-2.0-0
 Description: Simple game making tool
  Game making tool based on lua language with wrapped coroutines
