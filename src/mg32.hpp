@@ -21,7 +21,8 @@ namespace mg32
     enum class Command
     {
         Blit,
-        BlitEx
+        BlitEx,
+        Rectangle
     };
 
     class DrawCommand
@@ -34,6 +35,7 @@ namespace mg32
         int flip;
         double angle;
         SDL_Point pivot;
+        SDL_Color color;
 
         SDL_Texture* texture;
         SDL_Rect src;

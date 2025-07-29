@@ -495,3 +495,7 @@ function draw_text(txt,x,y,z,bank)
     end
 
 end
+
+function draw_rectangle(x,y,z,w,h,c)
+    mg32_draw_rectangle(x,y,z,w,h,c.r,c.g,c.b,c.a)
+end

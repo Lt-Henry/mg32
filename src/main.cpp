@@ -236,7 +236,6 @@ int gamepad_joystick(lua_State* L)
     return 2;
 }
 
-
 int gamepad_rumble(lua_State* L)
 {
     int id = lua_tonumber(L, 1);
@@ -350,6 +349,14 @@ static void draw(mg32::DrawCommand* q)
 
             case mg32::Command::BlitEx:
                 SDL_RenderCopyEx(renderer,q->texture,&q->src,&q->dst,q->angle,&q->pivot,static_cast<SDL_RendererFlip>(q->flip));
+            break;
+
+            case mg32::Command::Rectangle:
+                SDL_SetRenderDrawColor(renderer, q->color.r,
+                                                 q->color.g,
+                                                 q->color.b,
+                                                 q->color.a);
+                SDL_RenderFillRect(renderer, &q->src);
             break;
         }
 
@@ -550,6 +557,50 @@ int mg32_draw_texture_ex(lua_State* L)
     return 0;
 }
 
+int mg32_draw_rectangle(lua_State* L)
+{
+    int x = lua_tonumber(L, 1);
+    int y = lua_tonumber(L, 2);
+    int z = lua_tonumber(L, 3);
+
+    int w = lua_tonumber(L, 4);
+    int h = lua_tonumber(L, 5);
+
+    int r = lua_tonumber(L, 6);
+    int g = lua_tonumber(L, 7);
+    int b = lua_tonumber(L, 8);
+    int a = lua_tonumber(L, 9);
+
+    mg32::DrawCommand cmd;
+    cmd.command = mg32::Command::Rectangle;
+    cmd.left = nullptr;
+    cmd.right = nullptr;
+
+    cmd.src.x = x;
+    cmd.src.y = y;
+    cmd.z = z;
+
+    cmd.src.w = w;
+    cmd.src.h = h;
+
+    cmd.color.r = r;
+    cmd.color.g = g;
+    cmd.color.b = b;
+    cmd.color.a = a;
+
+    commands.push_back(cmd);
+
+    size_t size = commands.size();
+
+    if (size > 1) {
+        mg32::DrawCommand* top = &commands.data()[0];
+        mg32::DrawCommand* op = &commands.data()[size-1];
+        insert_command(top, op);
+    }
+
+    return 0;
+}
+
 void audio_pb_cb(void* userdata, uint8_t* stream, int len )
 {
 
@@ -699,6 +750,9 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, mg32_draw_texture_ex);
     lua_setglobal(L, "mg32_draw_texture_ex");
+
+    lua_pushcfunction(L, mg32_draw_rectangle);
+    lua_setglobal(L, "mg32_draw_rectangle");
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
