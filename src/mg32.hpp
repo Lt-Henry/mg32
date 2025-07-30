@@ -22,7 +22,8 @@ namespace mg32
     {
         Blit,
         BlitEx,
-        Rectangle
+        Rectangle,
+        Line
     };
 
     class DrawCommand

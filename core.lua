@@ -138,6 +138,8 @@ function frame()
                     else
                         mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     end
+
+                    --draw_hitbox(v)
                 
                 elseif current_status == "dead" then
                     v.state = STATE_DEAD
@@ -422,7 +424,7 @@ function dist(a,b)
 
 end
 
-function point_dist(x1,x2,y1,y2)
+function point_dist(x1,y1,x2,y2)
     local vx = (x1  - x2)
     local vy = (y1  - y2)
 
@@ -473,8 +475,21 @@ function set_screen_size(w,h)
     return mg32_set_screen_size(w,h)
 end
 
-function set_screen_color(r,g,b)
-    mg32_set_screen_color(r,g,b)
+function set_screen_color(c)
+    mg32_set_screen_color(c.r,c.g,c.b)
+end
+
+function rgba(r,g,b,a)
+    local c = {}
+    c.r = r
+    c.g = g
+    c.b = b
+    c.a = a
+    return c
+end
+
+function rgb(r,g,b)
+    return rgba(r,g,b,255)
 end
 
 function draw(texture,x,y,z,bank)
@@ -498,4 +513,25 @@ end
 
 function draw_rectangle(x,y,z,w,h,c)
     mg32_draw_rectangle(x,y,z,w,h,c.r,c.g,c.b,c.a)
+end
+
+function draw_line(x1,y1,x2,y2,z,c)
+    mg32_draw_line(x1,y1,x2,y2,z,c.r,c.g,c.b,c.a)
+end
+
+function draw_hitbox(t)
+    if t.shape == S_BOX then
+        local wh = t.width/2
+        local hh = t.height/2
+
+        local x1 = t.x - wh
+        local x2 = t.x + wh
+        local y1 = t.y - hh
+        local y2 = t.y + hh
+
+        draw_line(x1,y1,x2,y1,t.z+1,rgb(255,0,0))
+        draw_line(x2,y1,x2,y2,t.z+1,rgb(255,0,0))
+        draw_line(x1,y1,x1,y2,t.z+1,rgb(255,0,0))
+        draw_line(x1,y2,x2,y2,t.z+1,rgb(255,0,0))
+    end
 end

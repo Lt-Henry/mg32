@@ -34,6 +34,7 @@ map<int, mg32::Gamepad*> gamepads;
 
 SDL_Window* window;
 SDL_Renderer* renderer;
+SDL_Color screen_color = {0};
 
 vector<mg32::DrawCommand> commands;
 
@@ -259,6 +260,7 @@ int sleep(lua_State* L)
 int mg32_start_frame(lua_State* L)
 {
 
+    SDL_SetRenderDrawColor(renderer, screen_color.r, screen_color.g, screen_color.b, screen_color.a);
     SDL_RenderClear(renderer);
 
     for (size_t n = 0;n < SDL_NUM_SCANCODES; n++) {
@@ -358,6 +360,14 @@ static void draw(mg32::DrawCommand* q)
                                                  q->color.a);
                 SDL_RenderFillRect(renderer, &q->src);
             break;
+
+            case mg32::Command::Line:
+                SDL_SetRenderDrawColor(renderer, q->color.r,
+                                       q->color.g,
+                                       q->color.b,
+                                       q->color.a);
+                SDL_RenderDrawLine(renderer,q->src.x,q->src.y,q->dst.x,q->dst.y);
+            break;
         }
 
         if (q->right) {
@@ -414,7 +424,10 @@ int mg32_set_screen_color(lua_State* L)
     int r = lua_tonumber(L,1);
     int g = lua_tonumber(L,2);
     int b = lua_tonumber(L,3);
-    SDL_SetRenderDrawColor(renderer,r,g,b,255);
+    screen_color.r = r;
+    screen_color.g = g;
+    screen_color.b = b;
+    screen_color.a = 255;
 
     return 0;
 }
@@ -601,6 +614,52 @@ int mg32_draw_rectangle(lua_State* L)
     return 0;
 }
 
+int mg32_draw_line(lua_State* L)
+{
+    int x1 = lua_tonumber(L, 1);
+    int y1 = lua_tonumber(L, 2);
+
+    int x2 = lua_tonumber(L, 3);
+    int y2 = lua_tonumber(L, 4);
+
+    int z = lua_tonumber(L, 5);
+
+    int r = lua_tonumber(L, 6);
+    int g = lua_tonumber(L, 7);
+    int b = lua_tonumber(L, 8);
+    int a = lua_tonumber(L, 9);
+
+    mg32::DrawCommand cmd;
+    cmd.command = mg32::Command::Line;
+    cmd.left = nullptr;
+    cmd.right = nullptr;
+
+    cmd.src.x = x1;
+    cmd.src.y = y1;
+
+    cmd.dst.x = x2;
+    cmd.dst.y = y2;
+
+    cmd.z = z;
+
+    cmd.color.r = r;
+    cmd.color.g = g;
+    cmd.color.b = b;
+    cmd.color.a = a;
+
+    commands.push_back(cmd);
+
+    size_t size = commands.size();
+
+    if (size > 1) {
+        mg32::DrawCommand* top = &commands.data()[0];
+        mg32::DrawCommand* op = &commands.data()[size-1];
+        insert_command(top, op);
+    }
+
+    return 0;
+}
+
 void audio_pb_cb(void* userdata, uint8_t* stream, int len )
 {
 
@@ -753,6 +812,9 @@ int main(int argc, char* argv[])
 
     lua_pushcfunction(L, mg32_draw_rectangle);
     lua_setglobal(L, "mg32_draw_rectangle");
+
+    lua_pushcfunction(L, mg32_draw_line);
+    lua_setglobal(L, "mg32_draw_line");
 
     SDL_Init(SDL_INIT_EVERYTHING);
 
