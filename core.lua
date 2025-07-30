@@ -125,7 +125,8 @@ function frame()
                     coroutine.resume(v.thread,table.unpack(v.args))
                 elseif v.state == STATE_ALIVE then
                     v.ticks = ticks
-                    coroutine.resume(v.thread)
+                    local dbg = coroutine.resume(v.thread)
+                    --print(dbg)
                 end
 
                 local current_status = coroutine.status(v.thread)
@@ -143,10 +144,12 @@ function frame()
                 
                 elseif current_status == "dead" then
                     v.state = STATE_DEAD
+                    print(debug.traceback(v.thread))
                 end
 
             elseif status == "dead" then
                 v.state = STATE_DEAD
+                print(debug.traceback(v.thread))
             end
         end
 

@@ -730,6 +730,7 @@ int main(int argc, char* argv[])
     status = luaL_loadfile(L, argv[1]);
     if(status != LUA_OK) {
         cerr<<"Failed to load file "<<argv[1]<<endl;
+        cerr<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
@@ -826,6 +827,8 @@ int main(int argc, char* argv[])
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 640,360);
     
+    SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
+
     SDL_StopTextInput();
 
     //SDL_PumpEvents();
