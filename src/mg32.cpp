@@ -84,9 +84,24 @@ void Gamepad::frame()
     }
 }
 
-Sample::Sample(string filename, SDL_AudioSpec spec)
+Sample::Sample(string filename, SDL_AudioSpec spec) : size(0), buffer(nullptr)
 {
     this->spec = spec;
+    string extension;
+    
+    // accept files with form a.wav
+    
+    if (filename.size() > 4) {
+        for (int n = 0;n < 4;n++) {
+            extension.push_back(std::tolower(filename[filename.size()-4+n]));
+        }
 
-    SDL_LoadWAV(filename.c_str(),&spec,&buffer,&size);
+        if (extension == ".wav") {
+            SDL_LoadWAV(filename.c_str(),&spec,&buffer,&size);
+        }
+        
+        if (extension == ".ogg") {
+            //ToDo
+        }
+    }
 }
