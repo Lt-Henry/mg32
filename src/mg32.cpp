@@ -1,5 +1,7 @@
 #include "mg32.hpp"
 
+#include	<sndfile.hh>
+
 #include <SDL2/SDL_image.h>
 
 #include <iostream>
@@ -101,7 +103,17 @@ Sample::Sample(string filename, SDL_AudioSpec spec) : size(0), buffer(nullptr)
         }
         
         if (extension == ".ogg") {
-            //ToDo
+            SndfileHandle file ;
+
+            file = SndfileHandle (filename) ;
+            size_t length = file.frames() * file.channels();
+
+            int16_t* frames = new int16_t[length];
+            file.read (frames, length) ;
+
+            this->buffer = (uint8_t*)frames;
+            this->size = length * 2;
+
         }
     }
 }
