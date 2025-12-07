@@ -78,6 +78,7 @@ namespace mg32
         SDL_AudioSpec spec;
 
         Sample(std::string filename, SDL_AudioSpec spec);
+        ~Sample();
     };
 
     class Stream

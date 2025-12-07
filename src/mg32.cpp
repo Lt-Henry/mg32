@@ -90,30 +90,38 @@ Sample::Sample(string filename, SDL_AudioSpec spec) : size(0), buffer(nullptr)
 {
     this->spec = spec;
     string extension;
-    
-    // accept files with form a.wav
-    
-    if (filename.size() > 4) {
-        for (int n = 0;n < 4;n++) {
-            extension.push_back(std::tolower(filename[filename.size()-4+n]));
-        }
 
-        if (extension == ".wav") {
-            SDL_LoadWAV(filename.c_str(),&spec,&buffer,&size);
-        }
-        
-        if (extension == ".ogg") {
-            SndfileHandle file ;
+    SDL_AudioCVT cvt;
 
-            file = SndfileHandle (filename) ;
-            size_t length = file.frames() * file.channels();
+    SndfileHandle file ;
 
-            int16_t* frames = new int16_t[length];
-            file.read (frames, length) ;
+    file = SndfileHandle (filename);
 
-            this->buffer = (uint8_t*)frames;
-            this->size = length * 2;
+    if (file.frames() > 0) {
 
-        }
+        size_t length = file.frames() * file.channels();
+
+        // convert
+        SDL_BuildAudioCVT(&cvt, AUDIO_S16, file.channels(), file.samplerate(), spec.format, spec.channels, spec.freq);
+
+        cvt.len = length * sizeof(int16_t);
+        cvt.buf = new uint8_t[cvt.len * cvt.len_mult];
+
+        // read data
+        file.read ((int16_t *)cvt.buf, length) ;
+
+        SDL_ConvertAudio(&cvt);
+
+        this->buffer = cvt.buf;
+        this->size = cvt.len_cvt;
+
+    }
+
+}
+
+Sample::~Sample()
+{
+    if (this->buffer) {
+        delete [] this->buffer;
     }
 }
