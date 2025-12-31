@@ -349,8 +349,12 @@ static void draw(mg32::DrawCommand* q)
                 SDL_RenderCopy(renderer,q->texture,&q->src,&q->dst);
             break;
 
-            case mg32::Command::BlitEx:
+            case mg32::Command::BlitEx: {
+                uint8_t alpha = q->opacity * 255;
+                SDL_SetTextureAlphaMod(q->texture, alpha);
                 SDL_RenderCopyEx(renderer,q->texture,&q->src,&q->dst,q->angle,&q->pivot,static_cast<SDL_RendererFlip>(q->flip));
+                SDL_SetTextureAlphaMod(q->texture, 255);
+                }
             break;
 
             case mg32::Command::Rectangle:
@@ -520,8 +524,9 @@ int mg32_draw_texture_ex(lua_State* L)
     int z = lua_tonumber(L, 5);
     int flip = lua_tonumber(L, 6);
     double angle = lua_tonumber(L, 7);
-    int px = lua_tonumber(L, 8);
-    int py = lua_tonumber(L, 9);
+    double opacity = lua_tonumber(L,8);
+    int px = lua_tonumber(L, 9);
+    int py = lua_tonumber(L, 10);
 
     mg32::Bank* bank = banks[bank_id];
 
@@ -542,6 +547,7 @@ int mg32_draw_texture_ex(lua_State* L)
         cmd.z = z;
         cmd.angle = angle;
         cmd.flip = flip;
+        cmd.opacity = opacity;
         cmd.pivot.x = px;
         cmd.pivot.y = py;
 
@@ -730,6 +736,7 @@ int main(int argc, char* argv[])
     status = luaL_loadfile(L, argv[1]);
     if(status != LUA_OK) {
         cerr<<"Failed to load file "<<argv[1]<<endl;
+        cerr<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
@@ -826,6 +833,8 @@ int main(int argc, char* argv[])
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetLogicalSize(renderer, 640,360);
     
+    SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
+
     SDL_StopTextInput();
 
     //SDL_PumpEvents();

@@ -4,9 +4,10 @@ libm = gcc.find_library('m')
 sdl2 = dependency('sdl2')
 sdl2_image = dependency('SDL2_image')
 lua = dependency('lua54-c++')
+sndfile = dependency('sndfile')
 
 executable('mg32', ['main.cpp','mg32.cpp'],
     cpp_args:['-std=c++17','-Wfatal-errors'],
-    dependencies: [libm,sdl2,sdl2_image,lua],
+    dependencies: [libm,sdl2,sdl2_image,lua,sndfile],
     install: true
     )

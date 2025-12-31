@@ -35,6 +35,7 @@ namespace mg32
         int z;
         int flip;
         double angle;
+        double opacity;
         SDL_Point pivot;
         SDL_Color color;
 
@@ -77,6 +78,7 @@ namespace mg32
         SDL_AudioSpec spec;
 
         Sample(std::string filename, SDL_AudioSpec spec);
+        ~Sample();
     };
 
     class Stream
