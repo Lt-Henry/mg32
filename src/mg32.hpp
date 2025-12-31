@@ -21,7 +21,9 @@ namespace mg32
     enum class Command
     {
         Blit,
-        BlitEx
+        BlitEx,
+        Rectangle,
+        Line
     };
 
     class DrawCommand
@@ -33,7 +35,9 @@ namespace mg32
         int z;
         int flip;
         double angle;
+        double opacity;
         SDL_Point pivot;
+        SDL_Color color;
 
         SDL_Texture* texture;
         SDL_Rect src;
@@ -74,6 +78,7 @@ namespace mg32
         SDL_AudioSpec spec;
 
         Sample(std::string filename, SDL_AudioSpec spec);
+        ~Sample();
     };
 
     class Stream

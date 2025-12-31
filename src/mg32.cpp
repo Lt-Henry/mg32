@@ -1,5 +1,7 @@
 #include "mg32.hpp"
 
+#include	<sndfile.hh>
+
 #include <SDL2/SDL_image.h>
 
 #include <iostream>
@@ -84,9 +86,42 @@ void Gamepad::frame()
     }
 }
 
-Sample::Sample(string filename, SDL_AudioSpec spec)
+Sample::Sample(string filename, SDL_AudioSpec spec) : size(0), buffer(nullptr)
 {
     this->spec = spec;
+    string extension;
 
-    SDL_LoadWAV(filename.c_str(),&spec,&buffer,&size);
+    SDL_AudioCVT cvt;
+
+    SndfileHandle file ;
+
+    file = SndfileHandle (filename);
+
+    if (file.frames() > 0) {
+
+        size_t length = file.frames() * file.channels();
+
+        // convert
+        SDL_BuildAudioCVT(&cvt, AUDIO_S16, file.channels(), file.samplerate(), spec.format, spec.channels, spec.freq);
+
+        cvt.len = length * sizeof(int16_t);
+        cvt.buf = new uint8_t[cvt.len * cvt.len_mult];
+
+        // read data
+        file.read ((int16_t *)cvt.buf, length) ;
+
+        SDL_ConvertAudio(&cvt);
+
+        this->buffer = cvt.buf;
+        this->size = cvt.len_cvt;
+
+    }
+
+}
+
+Sample::~Sample()
+{
+    if (this->buffer) {
+        delete [] this->buffer;
+    }
 }

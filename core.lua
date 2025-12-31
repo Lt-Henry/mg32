@@ -125,7 +125,8 @@ function frame()
                     coroutine.resume(v.thread,table.unpack(v.args))
                 elseif v.state == STATE_ALIVE then
                     v.ticks = ticks
-                    coroutine.resume(v.thread)
+                    local dbg = coroutine.resume(v.thread)
+                    --print(dbg)
                 end
 
                 local current_status = coroutine.status(v.thread)
@@ -133,18 +134,22 @@ function frame()
                 if current_status == "suspended" then
                     table.insert(_tmp,v)
 
-                    if v.angle ~= 0 or v.flip ~= F_NORMAL then
-                        mg32_draw_texture_ex(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z,v.flip,v.angle,v.px,v.py)
+                    if v.angle ~= 0 or v.flip ~= F_NORMAL or v.opacity ~=1 then
+                        mg32_draw_texture_ex(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z,v.flip,v.angle,v.opacity,v.px,v.py)
                     else
                         mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
                     end
+
+                    --draw_hitbox(v)
                 
                 elseif current_status == "dead" then
                     v.state = STATE_DEAD
+                    print(debug.traceback(v.thread))
                 end
 
             elseif status == "dead" then
                 v.state = STATE_DEAD
+                print(debug.traceback(v.thread))
             end
         end
 
@@ -183,6 +188,7 @@ function create(p,...)
 
         angle = 0,
         flip = F_NORMAL,
+        opacity = 1,
 
         shape = S_POINT,
         radius = 0,
@@ -422,7 +428,7 @@ function dist(a,b)
 
 end
 
-function point_dist(x1,x2,y1,y2)
+function point_dist(x1,y1,x2,y2)
     local vx = (x1  - x2)
     local vy = (y1  - y2)
 
@@ -473,8 +479,21 @@ function set_screen_size(w,h)
     return mg32_set_screen_size(w,h)
 end
 
-function set_screen_color(r,g,b)
-    mg32_set_screen_color(r,g,b)
+function set_screen_color(c)
+    mg32_set_screen_color(c.r,c.g,c.b)
+end
+
+function rgba(r,g,b,a)
+    local c = {}
+    c.r = r
+    c.g = g
+    c.b = b
+    c.a = a
+    return c
+end
+
+function rgb(r,g,b)
+    return rgba(r,g,b,255)
 end
 
 function draw(texture,x,y,z,bank)
@@ -494,4 +513,48 @@ function draw_text(txt,x,y,z,bank)
         x = x + tw
     end
 
+end
+
+function draw_rectangle(x,y,z,w,h,c)
+    mg32_draw_rectangle(x,y,z,w,h,c.r,c.g,c.b,c.a)
+end
+
+function draw_line(x1,y1,x2,y2,z,c)
+    mg32_draw_line(x1,y1,x2,y2,z,c.r,c.g,c.b,c.a)
+end
+
+function draw_circle(x,y,z,r,s,c)
+    local radians = math.pi * 2.0 / s
+    local angle1 = 0
+    local angle2 = radians
+    
+    for n=0, s do
+        local x1 = x + (math.cos(angle1) * r)
+        local y1 = y + (math.sin(angle1) * r)
+        
+        local x2 = x + (math.cos(angle2) * r)
+        local y2 = y + (math.sin(angle2) * r)
+        
+        mg32_draw_line(x1,y1,x2,y2,z,c.r,c.g,c.b,c.a)
+    
+        angle1 = angle1 + radians
+        angle2 = angle2 + radians
+    end
+end
+
+function draw_hitbox(t)
+    if t.shape == S_BOX then
+        local wh = t.width/2
+        local hh = t.height/2
+
+        local x1 = t.x - wh
+        local x2 = t.x + wh
+        local y1 = t.y - hh
+        local y2 = t.y + hh
+
+        draw_line(x1,y1,x2,y1,t.z+1,rgb(255,0,0))
+        draw_line(x2,y1,x2,y2,t.z+1,rgb(255,0,0))
+        draw_line(x1,y1,x1,y2,t.z+1,rgb(255,0,0))
+        draw_line(x1,y2,x2,y2,t.z+1,rgb(255,0,0))
+    end
 end
