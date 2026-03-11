@@ -12,7 +12,7 @@ using namespace std;
 
 Bank::Bank(SDL_Renderer* renderer, string filename,int tw, int th) : tile_width(tw), tile_height(th)
 {
-    SDL_Surface* surface = IMG_Load(filename.c_str());
+    surface = IMG_Load(filename.c_str());
 
     if (!surface) {
         cerr<<"Failed to load image:"<<filename<<endl;
@@ -23,12 +23,23 @@ Bank::Bank(SDL_Renderer* renderer, string filename,int tw, int th) : tile_width(
     width = surface->w;
     height = surface->h;
 
-    SDL_FreeSurface(surface);
 }
 
 Bank::~Bank()
 {
+    SDL_DestroyTexture(data);
+    SDL_FreeSurface(surface);
+}
 
+uint32_t Bank::get_pixel(uint32_t x,uint32_t y)
+{
+    if (x >= width or y >= height) {
+        return 0;
+    }
+
+    uint32_t* ptr = (uint32_t *)surface->pixels;
+
+    return ptr[x+y*width];
 }
 
 Gamepad::Gamepad(int which) : id(which)

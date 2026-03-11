@@ -9,6 +9,7 @@ namespace mg32
         public:
 
         SDL_Texture* data;
+        SDL_Surface* surface;
         int width;
         int height;
         int tile_width;
@@ -16,6 +17,8 @@ namespace mg32
 
         Bank(SDL_Renderer* renderer, std::string filename,int tw, int th);
         virtual ~Bank();
+
+        uint32_t get_pixel(uint32_t x,uint32_t y);
     };
 
     enum class Command

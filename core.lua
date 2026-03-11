@@ -90,6 +90,11 @@ _process_frame = {}
 _incoming = {}
 _id = 32
 _last_ticks = 0
+_layer = {}
+_layer[0] = {
+        x = 0,
+        y = 0
+    }
 
 function frame()
     if me == nil then
@@ -134,10 +139,13 @@ function frame()
                 if current_status == "suspended" then
                     table.insert(_tmp,v)
 
+                    local wx = _layer[v.layer].x + v.x - v.px
+                    local wy = _layer[v.layer].y + v.y - v.py
+
                     if v.angle ~= 0 or v.flip ~= F_NORMAL or v.opacity ~=1 then
-                        mg32_draw_texture_ex(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z,v.flip,v.angle,v.opacity,v.px,v.py)
+                        mg32_draw_texture_ex(v.bank,v.texture, wx, wy, v.z,v.flip,v.angle,v.opacity,v.px,v.py)
                     else
-                        mg32_draw_texture(v.bank,v.texture,v.x-v.px,v.y-v.py,v.z)
+                        mg32_draw_texture(v.bank,v.texture, wx, wy, v.z)
                     end
 
                     --draw_hitbox(v)
@@ -181,6 +189,7 @@ function create(p,...)
         x = 0,
         y = 0,
         z = 0,
+        layer = 0,
 
         -- pivot point
         px = 0,
@@ -557,4 +566,16 @@ function draw_hitbox(t)
         draw_line(x1,y1,x1,y2,t.z+1,rgb(255,0,0))
         draw_line(x1,y2,x2,y2,t.z+1,rgb(255,0,0))
     end
+end
+
+function create_layer(layer)
+    _layer[layer] = {
+        x = 0,
+        y = 0
+    }
+end
+
+function move_camera(layer, x, y)
+    _layer[layer].x = -x
+    _layer[layer].y = -y
 end
