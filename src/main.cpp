@@ -805,6 +805,9 @@ int main(int argc, char* argv[])
     lua_pushcfunction(L, mg32_get_screen_size);
     lua_setglobal(L, "mg32_get_screen_size");
 
+    lua_pushcfunction(L, mg32_set_screen_size);
+    lua_setglobal(L, "mg32_set_screen_size");
+
     lua_pushcfunction(L, mg32_set_screen_color);
     lua_setglobal(L, "mg32_set_screen_color");
 
@@ -828,10 +831,10 @@ int main(int argc, char* argv[])
     window = SDL_CreateWindow("MG32",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
-                              640*2,360*2,SDL_WINDOW_FULLSCREEN_DESKTOP);
+                              0,0,SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_RenderSetLogicalSize(renderer, 640,360);
+    //SDL_RenderSetLogicalSize(renderer, 640,360);
     
     SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
 
