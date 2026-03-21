@@ -401,6 +401,21 @@ int mg32_exit(lua_State* L)
     return 0;
 }
 
+void push_screen_change(lua_State* L)
+{
+    int w,h;
+
+    SDL_RenderGetLogicalSize(renderer,&w,&h);
+
+    lua_getglobal(L, "_cb_screen_change");
+    lua_pushnumber(L, w);
+    lua_pushnumber(L, h);
+
+    if (lua_pcall(L, 2, 0, 0) != 0) {
+        cerr<<"Error calling callback _cb_screen_change:"<<lua_tostring(L, -1)<<endl;
+    }
+}
+
 int mg32_get_screen_size(lua_State* L)
 {
     int w,h;
@@ -419,6 +434,8 @@ int mg32_set_screen_size(lua_State* L)
     
     //SDL_GetRendererOutputSize(renderer,&w,&h);
     SDL_RenderSetLogicalSize(renderer, w,h);
+
+    push_screen_change(L);
     
     return 0;
 }
@@ -876,6 +893,8 @@ int main(int argc, char* argv[])
     }
 
     SDL_PauseAudioDevice(pb_device_id,0);
+
+    push_screen_change(L);
 
     lua_getglobal(L, "main");
 

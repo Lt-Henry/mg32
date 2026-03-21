@@ -47,6 +47,8 @@ K_UP = 82
 M_LEFT = 1
 M_MIDDLE = 2
 M_RIGHT = 3
+M_X1 = 4
+M_X2 = 5
 
 -- gamepad buttons
 GP_A = 0
@@ -93,8 +95,23 @@ _last_ticks = 0
 _layer = {}
 _layer[0] = {
         x = 0,
-        y = 0
+        y = 0,
+        z = 0,
+        rx = 1,
+        ry = 1
     }
+_camera = {
+        x = 0,
+        y = 0,
+        cx = 0,
+        cy = 0
+    }
+
+function _cb_screen_change(w,h)
+    _camera.cx = w/2
+    _camera.cy = h/2
+    --io.write("screen size:"..w.."x"..h.."\n")
+end
 
 function frame()
     if me == nil then
@@ -141,11 +158,12 @@ function frame()
 
                     local wx = _layer[v.layer].x + v.x - v.px
                     local wy = _layer[v.layer].y + v.y - v.py
+                    local wz = _layer[v.layer].z + v.z
 
                     if v.angle ~= 0 or v.flip ~= F_NORMAL or v.opacity ~=1 then
-                        mg32_draw_texture_ex(v.bank,v.texture, wx, wy, v.z,v.flip,v.angle,v.opacity,v.px,v.py)
+                        mg32_draw_texture_ex(v.bank,v.texture, wx, wy, wz,v.flip,v.angle,v.opacity,v.px,v.py)
                     else
-                        mg32_draw_texture(v.bank,v.texture, wx, wy, v.z)
+                        mg32_draw_texture(v.bank,v.texture, wx, wy, wz)
                     end
 
                     --draw_hitbox(v)
@@ -568,14 +586,28 @@ function draw_hitbox(t)
     end
 end
 
-function create_layer(layer)
+function create_layer(layer,depth,ratiox,ratioy)
+
     _layer[layer] = {
         x = 0,
-        y = 0
+        y = 0,
+        z = depth,
+        rx = ratiox,
+        ry = ratioy
     }
 end
 
-function move_camera(layer, x, y)
-    _layer[layer].x = -x
-    _layer[layer].y = -y
+function move_camera(x, y)
+
+    _camera.x = x
+    _camera.y = y
+
+    for k,v in ipairs(_layer) do
+        v.x =( -_camera.x * v.rx) + _camera.cx
+        v.y = (-_camera.y * v.ry) + _camera.cy
+    end
+end
+
+function get_camera()
+    return _camera.x,_camera.y
 end
