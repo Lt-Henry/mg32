@@ -463,12 +463,15 @@ int mg32_ticks(lua_State* L)
 
 static void insert_command(mg32::DrawCommand* q, mg32::DrawCommand* t)
 {
-    if (t->z<q->z) {
+    L1:
+    if (t->z < q->z) {
         if (q->left==nullptr) {
             q->left=t;
         }
         else {
-            insert_command(q->left,t);
+            //insert_command(q->left,t);
+            q = q->left;
+            goto L1;
         }
     }
     else {
@@ -476,18 +479,23 @@ static void insert_command(mg32::DrawCommand* q, mg32::DrawCommand* t)
             q->right=t;
         }
         else {
-            insert_command(q->right,t);
+            //insert_command(q->right,t);
+            q = q->right;
+            goto L1;
         }
     }
 }
 
 int mg32_draw_texture(lua_State* L)
 {
+    static mg32::DrawCommand* last = nullptr;
+
     int bank_id = lua_tonumber(L, 1);
     int texture_id = lua_tonumber(L, 2);
     int x = lua_tonumber(L, 3);
     int y = lua_tonumber(L, 4);
     int z = lua_tonumber(L, 5);
+
 
     mg32::Bank* bank = banks[bank_id];
 
@@ -519,14 +527,23 @@ int mg32_draw_texture(lua_State* L)
         cmd.dst.h = th;
 
         commands.push_back(cmd);
-
         size_t size = commands.size();
 
-        if (size > 1) {
-            mg32::DrawCommand* top = &commands.data()[0];
-            mg32::DrawCommand* op = &commands.data()[size-1];
-            insert_command(top, op);
+        mg32::DrawCommand* op = &commands.data()[size-1];
+
+        if (last!=nullptr and last->z == z) {
+            last->right = op;
+            last = op;
         }
+        else {
+            if (size > 1) {
+                mg32::DrawCommand* top = &commands.data()[0];
+
+                insert_command(top, op);
+            }
+        }
+
+        last = op;
 
     }
     return 0;
@@ -876,7 +893,8 @@ int main(int argc, char* argv[])
         mouse_buttons_last[n] = 0;
     }
     
-    commands.reserve(1024);
+    // this needs a rethink
+    commands.reserve(8132);
 
     // audio setup
 
