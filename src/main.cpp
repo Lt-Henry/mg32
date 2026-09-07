@@ -763,19 +763,21 @@ int main(int argc, char* argv[])
     }
 
     if (lua_pcall(L, 0, 0, 0) != 0) {
-        cerr<<"Error compiling core:"<<lua_tostring(L, -1)<<endl;
+        cerr<<"Error compiling core:"<<endl;
+        cerr<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
     status = luaL_loadfile(L, argv[1]);
     if(status != LUA_OK) {
-        cerr<<"Failed to load file "<<argv[1]<<endl;
+        cerr<<"Failed to load file "<<argv[1]<<":"<<endl;
         cerr<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
     if (lua_pcall(L, 0, 0, 0) != 0) {
-        cerr<<"Error compiling main:"<<lua_tostring(L, -1)<<endl;
+        cerr<<"Error compiling file "<<argv[1]<<":"<<endl;
+        cerr<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
@@ -876,6 +878,8 @@ int main(int argc, char* argv[])
 
     //SDL_PumpEvents();
     //keyboard = SDL_GetKeyboardState(nullptr);
+    clog<<"Number of SDL scancodes:"<<SDL_NUM_SCANCODES<<endl;
+
     keyboard.reserve(SDL_NUM_SCANCODES);
     keyboard_last.reserve(SDL_NUM_SCANCODES);
     
@@ -883,7 +887,6 @@ int main(int argc, char* argv[])
         keyboard_last[n] = 0;
         keyboard[n] = 0;
     }
-    
     
     mouse_buttons.reserve(MAX_MOUSE_BUTTONS);
     mouse_buttons_last.reserve(MAX_MOUSE_BUTTONS);
@@ -917,7 +920,8 @@ int main(int argc, char* argv[])
     lua_getglobal(L, "main");
 
     if (lua_pcall(L, 0, 0, 0) != 0) {
-        cerr<<"Error running main:"<<lua_tostring(L, -1)<<endl;
+        cerr<<"Error running main():"<<endl;
+        cerr<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
