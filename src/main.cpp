@@ -870,7 +870,7 @@ int main(int argc, char* argv[])
                               0,0,SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    //SDL_RenderSetLogicalSize(renderer, 640,360);
+    SDL_RenderSetLogicalSize(renderer, 640,360);
     
     SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
 
@@ -884,16 +884,16 @@ int main(int argc, char* argv[])
     keyboard_last.reserve(SDL_NUM_SCANCODES);
     
     for (size_t n = 0;n < SDL_NUM_SCANCODES; n++) {
-        keyboard_last[n] = 0;
-        keyboard[n] = 0;
+        keyboard_last.push_back(0);
+        keyboard.push_back(0);
     }
     
     mouse_buttons.reserve(MAX_MOUSE_BUTTONS);
     mouse_buttons_last.reserve(MAX_MOUSE_BUTTONS);
     
     for (size_t n = 0; n < MAX_MOUSE_BUTTONS; n++) {
-        mouse_buttons[n] = 0;
-        mouse_buttons_last[n] = 0;
+        mouse_buttons.push_back(0);
+        mouse_buttons_last.push_back(0);
     }
     
     // this needs a rethink
