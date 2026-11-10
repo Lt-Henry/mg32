@@ -15,6 +15,10 @@
 #include <sstream>
 #include <filesystem>
 
+#define SYNTAX_ERROR  "syntax-error:"
+#define CORE_ERROR    "core-error:"
+#define RUNTIME_ERROR "runtime-error:"
+
 using namespace std;
 
 map<int,mg32::Bank*> banks;
@@ -764,20 +768,20 @@ int main(int argc, char* argv[])
 
     if (lua_pcall(L, 0, 0, 0) != 0) {
         cerr<<"Error compiling core:"<<endl;
-        cerr<<lua_tostring(L, -1)<<endl;
+        cerr<<CORE_ERROR<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
     status = luaL_loadfile(L, argv[1]);
     if(status != LUA_OK) {
         cerr<<"Failed to load file "<<argv[1]<<":"<<endl;
-        cerr<<lua_tostring(L, -1)<<endl;
+        cerr<<SYNTAX_ERROR<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
     if (lua_pcall(L, 0, 0, 0) != 0) {
         cerr<<"Error compiling file "<<argv[1]<<":"<<endl;
-        cerr<<lua_tostring(L, -1)<<endl;
+        cerr<<SYNTAX_ERROR<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
@@ -921,7 +925,7 @@ int main(int argc, char* argv[])
 
     if (lua_pcall(L, 0, 0, 0) != 0) {
         cerr<<"Error running main():"<<endl;
-        cerr<<lua_tostring(L, -1)<<endl;
+        cerr<<RUNTIME_ERROR<<lua_tostring(L, -1)<<endl;
         return -1;
     }
 
